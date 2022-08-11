@@ -5,6 +5,4 @@ Charts              - https://github.com/Matrix-Energia/matrix.devops.template.c
 Java Application    - https://github.com/Matrix-Energia/matrix.devops.template.java.api
 
 # TODO:
-- [ ] Add WPA Pipelines
-- [ ] Add Container Apps Pipelines
 - [ ] Add Cron Template
