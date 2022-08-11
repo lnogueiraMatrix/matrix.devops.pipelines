@@ -1,0 +1,21 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: 
+    - "main"
+    - "hml"
+    - "dev"
+    - "feature/*"
+
+jobs:
+  call-shared-workflow:
+    uses: ./.github/workflows/k8s-deploy-v4.yaml
+    secrets: inherit
+    with:
+      namespace: matrix-apps    # Application Namespace ( Project )
+      port: 3000                # Application Container Port - Injected as PORT as Environment Var
+      replicas: 1               # Initial Replica Count
+      external: true            # Expose the application externally - https://<env>-app.matrixenergia.com/<my-repo>
+      auth: false               # Request a Authentication Proxy
+      removePathPrefix: true    # Remove the basepath from the requests - It strips the '/<my-repo>'
