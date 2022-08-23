@@ -4,7 +4,7 @@ env:
   HELM_VERSION: v3.9.2
   CHART_REVISION: v5
   CHART_PATH: charts
-  CHART_TYPE: api
+  CHART_TYPE: webpage
 
 on:
   workflow_call:
@@ -26,10 +26,6 @@ on:
         required: false
         default: true
       auth:
-        type: boolean
-        required: false
-        default: false
-      removePathPrefix:
         type: boolean
         required: false
         default: false
@@ -119,6 +115,7 @@ jobs:
             ${{ env.CHART_PATH }}/${{ env.CHART_TYPE }} \
             --install \
             --namespace ${{ inputs.namespace }} \
+            --create-namespace \
             --set environment=${{ env.ENVIRONMENT_LOWER }} \
             --set image=${{ env.IMAGE }}:${{ env.TAG }} \
             --set external=${{ inputs.external }} \

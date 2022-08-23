@@ -10,12 +10,11 @@ on:
 
 jobs:
   call-shared-workflow:
-    uses: ./.github/workflows/k8s-deploy-v5.yaml
+    uses: ./.github/workflows/k8s-deploy-v5-webpage.yaml
     secrets: inherit
     with:
-      namespace: matrix-apps
+      namespace: matrix-webpages
       port: 3000
       replicas: 1
       external: true
       auth: false
-      removePathPrefix: false
