@@ -32,7 +32,7 @@ on:
       removePathPrefix:
         type: boolean
         required: false
-        default: false
+        default: true
 
 jobs:
   build-and-deploy:
@@ -40,6 +40,9 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ secrets.GIT_TOKEN_CUSTOM }}
 
       - name: prd
         if: github.ref == 'main'
