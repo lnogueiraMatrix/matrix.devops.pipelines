@@ -33,6 +33,10 @@ on:
         type: boolean
         required: false
         default: true
+      tokenName:
+        type: string
+        required: false
+        default: "GIT_TOKEN"
 
 jobs:
   build-and-deploy:
@@ -61,9 +65,10 @@ jobs:
       - name: not prd or hml
         if: ( github.ref != 'main' && github.ref != 'hml' )
         run: |
+          REV_NAME=${GITHUB_REF_NAME,,}
           echo "ENVIRONMENT=DEV" >> $GITHUB_ENV
           echo "ENVIRONMENT_LOWER=dev" >> $GITHUB_ENV
-          echo "APP_REVISION=${GITHUB_REF_NAME//\//-}" >> $GITHUB_ENV
+          echo "APP_REVISION=${REV_NAME//\//-}" >> $GITHUB_ENV
 
       - name: configure variables
         run: |
@@ -90,10 +95,11 @@ jobs:
 
       - name: docker build
         run: |
-          docker build . \
+          docker build \
+            --build-arg ${{ inputs.tokenName }}=${{ secrets.PACKAGES_TOKEN }} \
             -t ${IMAGE}:${TAG} \
             -t ${IMAGE}:latest \
-            --build-arg CONFIG=${{ secrets[env.APP_CONFIG_NAME] }}
+            .
 
       - name: docker push
         run: docker push --all-tags ${IMAGE}
