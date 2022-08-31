@@ -36,6 +36,9 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ secrets.GIT_TOKEN_CUSTOM }}
 
       - name: prd
         if: github.ref == 'main'

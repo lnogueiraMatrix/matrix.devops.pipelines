@@ -19,4 +19,4 @@ jobs:
       external: true            # Expose the application externally - https://<env>-app.matrixenergia.com/<my-repo>
       auth: false               # Request a Authentication Proxy
       removePathPrefix: true    # Remove the basepath from the requests - It strips the '/<my-repo>'
-      tokenName: NPM_TOKEN      # Token to install dependencies - for using at pip or .npmrc
+      tokenName: GIT_TOKEN      # Token to install dependencies - for using at pip or .npmrc
