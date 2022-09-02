@@ -68,7 +68,7 @@ jobs:
           REV_NAME=${GITHUB_REF_NAME,,}
           echo "ENVIRONMENT=DEV" >> $GITHUB_ENV
           echo "ENVIRONMENT_LOWER=dev" >> $GITHUB_ENV
-          echo "APP_REVISION=${REF_NAME//\//-}" >> $GITHUB_ENV
+          echo "APP_REVISION=${REV_NAME//\//-}" >> $GITHUB_ENV
 
       - name: configure variables
         run: |
