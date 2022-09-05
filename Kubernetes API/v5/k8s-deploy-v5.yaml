@@ -49,21 +49,21 @@ jobs:
           token: ${{ secrets.GIT_TOKEN_CUSTOM }}
 
       - name: prd
-        if: github.ref == 'main'
+        if: github.ref_name == 'main'
         run: |
           echo "ENVIRONMENT=PRD" >> $GITHUB_ENV
           echo "ENVIRONMENT_LOWER=prd" >> $GITHUB_ENV
           echo "APP_REVISION=prd" >> $GITHUB_ENV
 
       - name: hml
-        if: github.ref == 'hml'
+        if: github.ref_name == 'hml'
         run: |
           echo "ENVIRONMENT=HML" >> $GITHUB_ENV
           echo "ENVIRONMENT_LOWER=hml" >> $GITHUB_ENV
           echo "APP_REVISION=hml" >> $GITHUB_ENV
 
       - name: not prd or hml
-        if: ( github.ref != 'main' && github.ref != 'hml' )
+        if: ( github.ref_name != 'main' && github.ref_name != 'hml' )
         run: |
           REV_NAME=${GITHUB_REF_NAME,,}
           echo "ENVIRONMENT=DEV" >> $GITHUB_ENV
