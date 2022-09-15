@@ -1,0 +1,140 @@
+name: build and deploy to k8s
+
+env:
+  HELM_VERSION: v3.9.2
+  CHART_REVISION: v5
+  CHART_PATH: charts
+  CHART_TYPE: webpage
+
+on:
+  workflow_call:
+    inputs:
+      namespace:
+        type: string
+        required: false
+        default: matrix-webpages
+      port:
+        type: number
+        required: false
+        default: 8080
+      replicas:
+        type: number
+        required: false
+        default: 1
+      external:
+        type: boolean
+        required: false
+        default: true
+      auth:
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [16.14.2]
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ secrets.GIT_TOKEN_CUSTOM }}
+
+      - name: prd
+        if: github.ref == 'main'
+        run: |
+          echo "ENVIRONMENT=PRD" >> $GITHUB_ENV
+          echo "ENVIRONMENT_LOWER=prd" >> $GITHUB_ENV
+          echo "APP_REVISION=prd" >> $GITHUB_ENV
+
+      - name: hml
+        if: github.ref == 'hml'
+        run: |
+          echo "ENVIRONMENT=HML" >> $GITHUB_ENV
+          echo "ENVIRONMENT_LOWER=hml" >> $GITHUB_ENV
+          echo "APP_REVISION=hml" >> $GITHUB_ENV
+
+      - name: not prd or hml
+        if: ( github.ref != 'main' && github.ref != 'hml' )
+        run: |
+          REV_NAME=${GITHUB_REF_NAME,,}
+          echo "ENVIRONMENT=DEV" >> $GITHUB_ENV
+          echo "ENVIRONMENT_LOWER=dev" >> $GITHUB_ENV
+          echo "APP_REVISION=${REV_NAME//\//-}" >> $GITHUB_ENV
+          
+      - name: configure variables
+        run: |
+          REGISTRY_NAME=${ENVIRONMENT_LOWER}akscr.azurecr.io
+          APP_NAME=${GITHUB_REPOSITORY/'Matrix-Energia/'/}
+          APP_NAME=${APP_NAME/matrix./}
+          APP_NAME=${APP_NAME//./-}
+          echo "APP_NAME=${APP_NAME}"                               >> $GITHUB_ENV
+          echo "APP_CONFIG_NAME=${ENVIRONMENT}_APP_CONFIG_NAME"     >> $GITHUB_ENV
+          echo "KUBE_CONFIG=MATRIX_${ENVIRONMENT}_AKS_KUBE_CONFIG"  >> $GITHUB_ENV
+          echo "REGISTRY_NAME=${REGISTRY_NAME}"                     >> $GITHUB_ENV
+          echo "REGISTRY_PWD=MATRIX_${ENVIRONMENT}_ACR_PASSWORD"    >> $GITHUB_ENV
+          echo "REGISTRY_USR=MATRIX_${ENVIRONMENT}_ACR_USERNAME"    >> $GITHUB_ENV
+          echo "IMAGE=${REGISTRY_NAME}/${GITHUB_REPOSITORY,,}"      >> $GITHUB_ENV
+          echo "TAG=${GITHUB_SHA}"                                  >> $GITHUB_ENV
+          echo "CONFIG=${ENVIRONMENT}_CONFIG"                       >> $GITHUB_ENV
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version}}
+      - run: npm ci
+      - run: npm run build --if-present        
+
+      - name: docker login 
+        uses: Azure/docker-login@v1
+        with:
+          login-server: ${{ env.REGISTRY_NAME }}
+          username: ${{ secrets[env.REGISTRY_USR] }}
+          password: ${{ secrets[env.REGISTRY_PWD] }}
+
+      - name: docker build
+        run: |
+          docker build . \
+            -t ${IMAGE}:${TAG} \
+            -t ${IMAGE}:latest \
+            --build-arg CONFIG=${{ secrets[env.APP_CONFIG_NAME] }}
+
+      - name: docker push
+        run: docker push --all-tags ${IMAGE}
+
+      - name: clone helms
+        uses: actions/checkout@v3
+        with:
+          repository: 'Matrix-Energia/matrix.devops.template.charts.git'
+          ref: ${{ env.CHART_REVISION }}
+          path: ${{ env.CHART_PATH }}
+          token: ${{ secrets.GIT_TOKEN_CUSTOM }}
+
+      - name: connect to cluster
+        uses: Azure/k8s-set-context@v2
+        with:
+          kubeconfig: ${{ secrets[env.KUBE_CONFIG] }}
+
+      - name: install helm tool
+        uses: azure/setup-helm@v3
+        with:
+          version: ${{ env.HELM_VERSION }}
+
+      - name: install helm chart
+        run: |
+          helm upgrade ${{ env.APP_NAME }}-${{ env.APP_REVISION }} \
+            ${{ env.CHART_PATH }}/${{ env.CHART_TYPE }} \
+            --install \
+            --namespace ${{ inputs.namespace }} \
+            --create-namespace \
+            --set environment=${{ env.ENVIRONMENT_LOWER }} \
+            --set image=${{ env.IMAGE }}:${{ env.TAG }} \
+            --set external=${{ inputs.external }} \
+            --set auth=${{ inputs.auth }} \
+            --set replicas=${{ inputs.replicas }} \
+            --set port=${{ inputs.port }} \
+            --set removePathPrefix=${{ inputs.removePathPrefix }} \
+            --set config=${{ secrets[env.CONFIG] }}
