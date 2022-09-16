@@ -2,9 +2,9 @@ name: build and deploy to k8s
 
 env:
   HELM_VERSION: v3.9.2
-  CHART_REVISION: v5
+  CHART_REVISION: v6
   CHART_PATH: charts
-  CHART_TYPE: webpage
+  CHART_TYPE: api
 
 on:
   workflow_call:
@@ -13,22 +13,14 @@ on:
         type: string
         required: false
         default: matrix-apps
-      port:
-        type: number
+      values:
+        type: string
         required: false
-        default: 8080
-      replicas:
-        type: number
+        default: .ci/values.yaml
+      tokenName:
+        type: string
         required: false
-        default: 1
-      external:
-        type: boolean
-        required: false
-        default: true
-      auth:
-        type: boolean
-        required: false
-        default: false
+        default: GIT_TOKEN
 
 jobs:
   build-and-deploy:
@@ -41,25 +33,26 @@ jobs:
           token: ${{ secrets.GIT_TOKEN_CUSTOM }}
 
       - name: prd
-        if: github.ref == 'main'
+        if: github.ref_name == 'main'
         run: |
           echo "ENVIRONMENT=PRD" >> $GITHUB_ENV
           echo "ENVIRONMENT_LOWER=prd" >> $GITHUB_ENV
           echo "APP_REVISION=prd" >> $GITHUB_ENV
 
       - name: hml
-        if: github.ref == 'hml'
+        if: github.ref_name == 'hml'
         run: |
           echo "ENVIRONMENT=HML" >> $GITHUB_ENV
           echo "ENVIRONMENT_LOWER=hml" >> $GITHUB_ENV
           echo "APP_REVISION=hml" >> $GITHUB_ENV
 
       - name: not prd or hml
-        if: ( github.ref != 'main' && github.ref != 'hml' )
+        if: ( github.ref_name != 'main' && github.ref_name != 'hml' )
         run: |
+          REV_NAME=${GITHUB_REF_NAME,,}
           echo "ENVIRONMENT=DEV" >> $GITHUB_ENV
           echo "ENVIRONMENT_LOWER=dev" >> $GITHUB_ENV
-          echo "APP_REVISION=${GITHUB_REF_NAME//\//-}" >> $GITHUB_ENV
+          echo "APP_REVISION=${REV_NAME//\//-}" >> $GITHUB_ENV
 
       - name: configure variables
         run: |
@@ -68,7 +61,6 @@ jobs:
           APP_NAME=${APP_NAME/matrix./}
           APP_NAME=${APP_NAME//./-}
           echo "APP_NAME=${APP_NAME}"                               >> $GITHUB_ENV
-          echo "APP_CONFIG_NAME=${ENVIRONMENT}_APP_CONFIG_NAME"     >> $GITHUB_ENV
           echo "KUBE_CONFIG=MATRIX_${ENVIRONMENT}_AKS_KUBE_CONFIG"  >> $GITHUB_ENV
           echo "REGISTRY_NAME=${REGISTRY_NAME}"                     >> $GITHUB_ENV
           echo "REGISTRY_PWD=MATRIX_${ENVIRONMENT}_ACR_PASSWORD"    >> $GITHUB_ENV
@@ -86,10 +78,11 @@ jobs:
 
       - name: docker build
         run: |
-          docker build . \
+          docker build \
+            --build-arg ${{ inputs.tokenName }}=${{ secrets.PACKAGES_TOKEN }} \
             -t ${IMAGE}:${TAG} \
             -t ${IMAGE}:latest \
-            --build-arg CONFIG=${{ secrets[env.APP_CONFIG_NAME] }}
+            .
 
       - name: docker push
         run: docker push --all-tags ${IMAGE}
@@ -112,18 +105,21 @@ jobs:
         with:
           version: ${{ env.HELM_VERSION }}
 
+      - name: query variables
+        id: parseEnvironmentVariables
+        uses: mikefarah/yq@master
+        with: 
+          cmd: |
+            echo ${{ secrets[env.CONFIG] }} | base64 -d | yq e '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' - | base64 -w 0
+
       - name: install helm chart
         run: |
           helm upgrade ${{ env.APP_NAME }}-${{ env.APP_REVISION }} \
             ${{ env.CHART_PATH }}/${{ env.CHART_TYPE }} \
             --install \
+            --wait \
             --namespace ${{ inputs.namespace }} \
-            --create-namespace \
+            --values ${{ inputs.values }} \
             --set environment=${{ env.ENVIRONMENT_LOWER }} \
             --set image=${{ env.IMAGE }}:${{ env.TAG }} \
-            --set external=${{ inputs.external }} \
-            --set auth=${{ inputs.auth }} \
-            --set replicas=${{ inputs.replicas }} \
-            --set port=${{ inputs.port }} \
-            --set removePathPrefix=${{ inputs.removePathPrefix }} \
-            --set config=${{ secrets[env.CONFIG] }}
+            --set config=${{ steps.parseEnvironmentVariables.outputs.result }}
