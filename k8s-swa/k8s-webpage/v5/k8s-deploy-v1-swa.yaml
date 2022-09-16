@@ -12,11 +12,11 @@ on:
       namespace:
         type: string
         required: false
-        default: matrix-webpages
+        default: matrix-apps
       port:
         type: number
         required: false
-        default: 8080
+        default: 80
       replicas:
         type: number
         required: false
@@ -60,11 +60,10 @@ jobs:
       - name: not prd or hml
         if: ( github.ref != 'main' && github.ref != 'hml' )
         run: |
-          REV_NAME=${GITHUB_REF_NAME,,}
           echo "ENVIRONMENT=DEV" >> $GITHUB_ENV
           echo "ENVIRONMENT_LOWER=dev" >> $GITHUB_ENV
-          echo "APP_REVISION=${REV_NAME//\//-}" >> $GITHUB_ENV
-          
+          echo "APP_REVISION=${GITHUB_REF_NAME//\//-}" >> $GITHUB_ENV
+
       - name: configure variables
         run: |
           REGISTRY_NAME=${ENVIRONMENT_LOWER}akscr.azurecr.io
@@ -86,7 +85,8 @@ jobs:
         with:
           node-version: ${{ matrix.node-version}}
       - run: npm ci
-      - run: npm run build --if-present        
+      - run: npm run build --if-present 
+      - run: npm run generate       
 
       - name: docker login 
         uses: Azure/docker-login@v1
