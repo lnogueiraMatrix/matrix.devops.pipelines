@@ -91,7 +91,9 @@ jobs:
           token: ${{ secrets.GIT_TOKEN_CUSTOM }}
       
       - name: copy dockerfile
-        run: mv ${{ env.PIPELINE_PATH }}/${{ env.DOCKERFILE_PATH }}/* ./
+        run: |
+          rm Dockerfile nginx.conf
+          mv ${{ env.PIPELINE_PATH }}/${{ env.DOCKERFILE_PATH }}/* ./
 
       - name: Check files
         run: ls -la && ls -la ${{ env.PIPELINE_PATH }}
