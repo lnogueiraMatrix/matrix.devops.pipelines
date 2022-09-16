@@ -93,7 +93,7 @@ jobs:
       - name: copy dockerfile
         run: |
           rm Dockerfile nginx.conf
-          mv ${{ env.PIPELINE_PATH }}/${{ env.DOCKERFILE_PATH }}/* ./
+          mv -f ${{ env.PIPELINE_PATH }}/${{ env.DOCKERFILE_PATH }}/* ./
 
       - name: Check files
         run: ls -la && ls -la ${{ env.PIPELINE_PATH }}
