@@ -28,7 +28,7 @@ on:
         type: boolean
         required: false
         default: true
-      destination:
+      output-dir:
         type: string
         required: false
         default: dist
@@ -140,7 +140,7 @@ jobs:
       - name: Docker build
         run: |          
           docker build \
-            --build-arg DESTINATION=${{ inputs.destination }} . \
+            --build-arg DESTINATION=${{ inputs.output-dir }} . \
             -t ${IMAGE}:${TAG} \
             -t ${IMAGE}:latest
 
