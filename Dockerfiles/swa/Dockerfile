@@ -1,14 +1,10 @@
 ARG DESTINATION=dist
-
 FROM nginx:stable-alpine
-
-WORKDIR /app 
 
 COPY ./nginx.conf /etc/nginx/nginx.conf
 
-COPY  $DESTINATION  /usr/share/nginx/html/
-
-ENV NUXT_HOST=0.0.0.0
-ENV NUXT_PORT=80
+WORKDIR /usr/share/nginx/html
+RUN rm -rf ./*
+COPY $DESTINATION  ./
 
 CMD [ "nginx", "-g", "daemon off;" ]
