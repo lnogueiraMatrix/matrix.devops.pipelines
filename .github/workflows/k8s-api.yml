@@ -115,8 +115,7 @@ jobs:
 
       - name: install helm chart
         run: |
-          helm upgrade \
-            ${{ env.APP_NAME }}-${{ env.APP_REVISION }} \
+          helm upgrade ${{ env.APP_NAME }}-${{ env.APP_REVISION }} \
             ${{ env.CHART_PATH }}/${{ env.CHART_TYPE }} \
             --install \
             --wait \
