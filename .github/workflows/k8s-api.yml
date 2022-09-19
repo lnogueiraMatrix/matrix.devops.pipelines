@@ -141,7 +141,7 @@ jobs:
 
   helm:
     runs-on: ubuntu-latest
-    needs: [ configuration, build-and-push, setup-helm-tool, setup-helm-chart ]
+    needs: [ app-configuration, build-and-push, setup-helm-tool, setup-helm-chart ]
     steps:
       - name: install helm chart
         run: |
