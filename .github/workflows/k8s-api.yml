@@ -111,6 +111,7 @@ jobs:
     steps:
       - name: docker build
         run: |
+          ls -lah
           docker build \
             --build-arg ${{ inputs.tokenName }}=${{ secrets.PACKAGES_TOKEN }} \
             -t "${{ needs.app-configuration.outputs.image }}:${{ needs.app-configuration.outputs.tag }}" \

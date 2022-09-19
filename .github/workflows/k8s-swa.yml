@@ -140,9 +140,10 @@ jobs:
       - name: Docker build
         run: |          
           docker build \
-            --build-arg DESTINATION=${{ inputs.output-dir }} . \
+            --build-arg DESTINATION=${{ inputs.output-dir }} \
             -t ${IMAGE}:${TAG} \
-            -t ${IMAGE}:latest
+            -t ${IMAGE}:latest \
+            .
 
 # Docker Push
       - name: docker push
