@@ -33,7 +33,6 @@ jobs:
       registry-pwd: ${{ steps.configure-app.outputs.registry-pwd }}
       kube-config: ${{ steps.configure-app.outputs.kube-config }}
       config-b64: ${{ steps.parse-variables.outputs.config-b64 }} # This parses the env var form a complex yaml to scalar properties then convert b64 encode it
-
     steps:
       - name: prd
         if: github.ref_name == 'main'
@@ -55,7 +54,7 @@ jobs:
       - name: set-vars
         # echo APP_TAG="${GITHUB_SHA:0:8}-${GITHUB_RUN_NUMBER}"       >> $GITHUB_ENV
         run: |
-          export REGISTRY_NAME=${ENVIRONMENT_LOWER}akscr.azurecr.io    
+          export REGISTRY_NAME=${ENVIRONMENT,,}akscr.azurecr.io    
           export APP_NAME="${GITHUB_REPOSITORY/'Matrix-Energia/'/}"
           export APP_NAME="${APP_NAME/matrix./}"
           echo APP_NAME="${APP_NAME//./-}"                            >> $GITHUB_ENV
