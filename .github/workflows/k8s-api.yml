@@ -25,14 +25,14 @@ on:
         default: GIT_TOKEN
 
 jobs:
-  configuration:
+  app-configuration:
     runs-on: ubuntu-latest
     outputs:
-      app-name: ${{ steps.configure.outputs.app-name }}
-      app-revision: ${{ steps.configure.outputs.app-name }}
-      app-tag: ${{ steps.configure.outputs.app-tag }}
-      app-image: ${{ steps.configure.outputs.app-image }}
-      app-config-b64: ${{ steps.parse-variables.outputs.app-config-b64 }} # This parses the env var form a complex yaml to scalar properties then convert b64 encode it
+      name: ${{ steps.configure-app.outputs.name }}
+      revision: ${{ steps.configure-app.outputs.name }}
+      tag: ${{ steps.configure-app.outputs.tag }}
+      image: ${{ steps.configure-app.outputs.image }}
+      config-b64: ${{ steps.parse-variables.outputs.config-b64 }} # This parses the env var form a complex yaml to scalar properties then convert b64 encode it
 
     steps:
       - name: checkout
@@ -74,13 +74,14 @@ jobs:
           echo REGISTRY_PWD="MATRIX_${ENVIRONMENT}_ACR_PASSWORD"      >> $GITHUB_ENV 
           echo ENVIRONMENT_LOWER="${ENVIRONMENT,,}"                   >> $GITHUB_ENV
 
-      - name: configure
+      - name: Configure app
+        id: configure-app
         run: |
           echo "::set-output name=environment::${ENVIRONMENT_LOWER}"
-          echo "::set-output name=app-name::${APP_NAME}"
-          echo "::set-output name=app-revision::${APP_REVISION}"
-          echo "::set-output name=app-tag::${APP_TAG}"
-          echo "::set-output name=app-image::${APP_IMAGE}"
+          echo "::set-output name=name::${APP_NAME}"
+          echo "::set-output name=revision::${APP_REVISION}"
+          echo "::set-output name=tag::${APP_TAG}"
+          echo "::set-output name=image::${APP_IMAGE}"
 
       - name: make yaml cfg plain
         id: parse-variables
@@ -89,7 +90,7 @@ jobs:
           cmd: |
             echo ${{ secrets[env.APP_CONFIG] }} > .cfgComplex
             cat .cfgComplex | base64 -d | yq e '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' - | base64 -w0 > .cfgFlat
-            echo "::set-output name=app-config-b64::$(cat .cfgFlat)"
+            echo "::set-output name=config-b64::$(cat .cfgFlat)"
       
       - name: connect to cluster
         uses: Azure/k8s-set-context@v2
@@ -105,21 +106,22 @@ jobs:
          
   build-and-push:
     runs-on: ubuntu-latest
-    needs: [ configuration ]
+    needs: [ app-configuration ]
     steps:
       - name: docker build
         run: |
           docker build \
             --build-arg ${{ inputs.tokenName }}=${{ secrets.PACKAGES_TOKEN }} \
-            -t ${{ needs.configuration.outputs.app-image }}:${{ needs.configuration.outputs.app-tag }} \
-            -t ${{ needs.configuration.outputs.app-image }}:latest \
+            -t ${{ needs.app-configuration.outputs.image }}:${{ needs.app-configuration.outputs.tag }} \
+            -t ${{ needs.app-configuration.outputs.image }}:latest \
             .
+
       - name: docker push
-        run: docker push --all-tags ${{ needs.configuration.outputs.app-image }}
+        run: docker push --all-tags ${{ needs.app-configuration.outputs.image }}
 
   setup-helm-tool:
     runs-on: ubuntu-latest
-    needs: [ configuration ]
+    needs: [ app-configuration ]
     steps:
       - name: install helm tool
         uses: azure/setup-helm@v3
@@ -143,14 +145,14 @@ jobs:
     steps:
       - name: install helm chart
         run: |
-          helm upgrade ${{ needs.configuration.outputs.app-name }}-${{ needs.configuration.outputs.app-revision }} \
+          helm upgrade ${{ needs.app-configuration.outputs.name }}-${{ needs.app-configuration.outputs.revision }} \
             ${{ env.CHART_PATH }}/${{ env.CHART_TYPE }} \
             --install \
             --wait \
             --timeout 6m0s \
             --namespace '${{ inputs.namespace }}' \
             --values    '${{ inputs.values }}' \
-            --set       environment='${{ needs.configuration.outputs.environment }}' \
-            --set       image='${{ needs.configuration.outputs.app-image }}:${{ needs.configuration.outputs.app-tag }}' \
+            --set       environment='${{ needs.app-configuration.outputs.environment }}' \
+            --set       image='${{ needs.app-configuration.outputs.image }}:${{ needs.app-configuration.outputs.tag }}' \
             --set       repository='${{ github.repository }}' \
-            --set       config='${{ needs.configuration.outputs.app-config-b64 }}'
+            --set       config='${{ needs.app-configuration.outputs.config-b64 }}'
