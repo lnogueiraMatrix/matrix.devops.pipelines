@@ -58,15 +58,15 @@ jobs:
           APP_NAME="${APP_NAME//./-}"
           ENVIRONMENT_LOWER="${ENVIRONMENT,,}"
           REGISTRY_NAME="${ENVIRONMENT_LOWER}akscr.azurecr.io"
-          echo ENVIRONMENT_LOWER="${ENVIRONMENT_LOWER}"               >> $GITHUB_ENV
-          echo APP_NAME="${APP_NAME}"                                 >> $GITHUB_ENV
-          echo APP_CONFIG="${ENVIRONMENT}_CONFIG"                     >> $GITHUB_ENV    
-          echo APP_IMAGE="${REGISTRY_NAME}/${GITHUB_REPOSITORY,,}"    >> $GITHUB_ENV
-          echo APP_TAG="${GITHUB_SHA:0:8}"                            >> $GITHUB_ENV
           echo REGISTRY_NAME="${REGISTRY_NAME}"                       >> $GITHUB_ENV
           echo REGISTRY_USR="MATRIX_${ENVIRONMENT}_ACR_USERNAME"      >> $GITHUB_ENV 
           echo REGISTRY_PWD="MATRIX_${ENVIRONMENT}_ACR_PASSWORD"      >> $GITHUB_ENV 
           echo KUBE_CONFIG="MATRIX_${ENVIRONMENT}_AKS_KUBE_CONFIG"    >> $GITHUB_ENV 
+          echo ENVIRONMENT_LOWER="${ENVIRONMENT_LOWER}"               >> $GITHUB_ENV
+          echo APP_NAME="${APP_NAME}"                                 >> $GITHUB_ENV
+          echo APP_CONFIG="${ENVIRONMENT}_CONFIG"                     >> $GITHUB_ENV
+          echo APP_IMAGE="${REGISTRY_NAME}/${GITHUB_REPOSITORY,,}"    >> $GITHUB_ENV
+          echo APP_TAG="${GITHUB_SHA:0:8}"                            >> $GITHUB_ENV
 
       - name: configure app
         id: configure-app
