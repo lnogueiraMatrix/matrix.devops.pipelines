@@ -28,11 +28,11 @@ jobs:
       revision: ${{ steps.configure-app.outputs.name }}
       image: ${{ steps.configure-app.outputs.image }}
       tag: ${{ steps.configure-app.outputs.tag }}
-      registry-name: ${{ steps.configure-creds.outputs.registry-name }}
-      registry-usr: ${{ steps.configure-creds.outputs.registry-usr }}
-      registry-pwd: ${{ steps.configure-creds.outputs.registry-pwd }}
-      kube-config: ${{ steps.configure-creds.outputs.kube-config }}
-      config-b64: ${{ steps.parse-variables.outputs.config-b64 }}
+      registry_name: ${{ steps.configure-creds.outputs.registry_name }}
+      registry_usr: ${{ steps.configure-creds.outputs.registry_usr }}
+      registry_pwd: ${{ steps.configure-creds.outputs.registry_pwd }}
+      kube_config: ${{ steps.configure-creds.outputs.kube_config }}
+      config_b64: ${{ steps.parse-variables.outputs.config_b64 }}
     steps:
       - name: prd
         if: github.ref_name == 'main'
@@ -91,7 +91,7 @@ jobs:
           cmd: |
             echo ${{ secrets[env.APP_CONFIG] }} > .cfgComplex
             cat .cfgComplex | base64 -d | yq e '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' - | base64 -w0 > .cfgFlat
-            echo "::set-output name=config-b64::$(cat .cfgFlat)"
+            echo "::set-output name=config_b64::$(cat .cfgFlat)"
       
   build-and-push:
     runs-on: ubuntu-latest
