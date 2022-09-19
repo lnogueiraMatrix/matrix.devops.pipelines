@@ -44,29 +44,30 @@ jobs:
       - name: prd
         if: github.ref_name == 'main'
         run: |
-          echo "ENVIRONMENT=PRD"                >> $GITHUB_ENV
-          echo "APP_REVISION=prd"               >> $GITHUB_ENV
+          echo "ENVIRONMENT=PRD"                    >> $GITHUB_ENV
+          echo "APP_REVISION=prd"                   >> $GITHUB_ENV
+          echo REGISTRY_NAME="prdakscr.azurecr.io"  >> $GITHUB_ENV
 
       - name: hml
         if: github.ref_name == 'hml'
         run: |
-          echo "ENVIRONMENT=HML"                >> $GITHUB_ENV
-          echo "APP_REVISION=hml"               >> $GITHUB_ENV
+          echo "ENVIRONMENT=HML"                    >> $GITHUB_ENV
+          echo "APP_REVISION=hml"                   >> $GITHUB_ENV
+          echo REGISTRY_NAME="hmlakscr.azurecr.io"  >> $GITHUB_ENV
 
       - name: not prd or hml
         if: ( github.ref_name != 'main' && github.ref_name != 'hml' )
         run: |
           REV_NAME=${GITHUB_REF_NAME,,}
-          echo "ENVIRONMENT=DEV"                >> $GITHUB_ENV                  
-          echo "APP_REVISION=${REV_NAME//\//-}" >> $GITHUB_ENV
+          echo "ENVIRONMENT=DEV"                    >> $GITHUB_ENV                  
+          echo REGISTRY_NAME="devakscr.azurecr.io"  >> $GITHUB_ENV
+          echo "APP_REVISION=${REV_NAME//\//-}"     >> $GITHUB_ENV
 
       - name: set-variables
-        run: |
-          REGISTRY_NAME="${ENVIRONMENT,,}akscr.azurecr.io"
+        run: |          
           APP_NAME="${GITHUB_REPOSITORY/'Matrix-Energia/'/}"
           APP_NAME="${APP_NAME/matrix./}"
           echo APP_NAME="${APP_NAME//./-}"                            >> $GITHUB_ENV
-          echo REGISTRY_NAME="${REGISTRY_NAME}"                       >> $GITHUB_ENV 
           echo REGISTRY_USR="MATRIX_${ENVIRONMENT}_ACR_USERNAME"      >> $GITHUB_ENV 
           echo REGISTRY_PWD="MATRIX_${ENVIRONMENT}_ACR_PASSWORD"      >> $GITHUB_ENV 
           echo APP_IMAGE="${REGISTRY_NAME}/${GITHUB_REPOSITORY,,}"    >> $GITHUB_ENV
@@ -78,11 +79,11 @@ jobs:
       - name: Configure app
         id: configure-app
         run: |
-          echo "::set-output name=environment::${ENVIRONMENT_LOWER}"
-          echo "::set-output name=name::${APP_NAME}"
-          echo "::set-output name=revision::${APP_REVISION}"
-          echo "::set-output name=tag::${APP_TAG}"
-          echo "::set-output name=image::${APP_IMAGE}"
+          echo "::set-output name=environment::${{ env.ENVIRONMENT_LOWER }}"
+          echo "::set-output name=name::${{ env.APP_NAME }}"
+          echo "::set-output name=revision::${{ env.APP_REVISION }}"
+          echo "::set-output name=tag::${{ env.APP_TAG }}"
+          echo "::set-output name=image::${{ env.APP_IMAGE }}"
 
       - name: make yaml cfg plain
         id: parse-variables
