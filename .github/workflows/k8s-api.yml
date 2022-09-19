@@ -2,7 +2,7 @@ name: build and deploy to k8s
 
 env:
   HELM_VERSION: v3.9.2
-  CHART_REVISION: v6
+  CHART_REVISION: v7
   CHART_PATH: charts
   CHART_TYPE: api
 
@@ -110,7 +110,7 @@ jobs:
         uses: mikefarah/yq@master
         with: 
           cmd: |
-            echo ${{ secrets[env.CONFIG] }} | base64 -d | yq e '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' - | base64 -w 0
+            echo ${{ secrets[env.CONFIG] }} | yq e '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' - | base64 -w 0
 
       - name: install helm chart
         run: |
