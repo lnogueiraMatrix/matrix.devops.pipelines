@@ -1,5 +1,4 @@
 name: k8s Api v7
-# echo APP_TAG="${GITHUB_SHA:0:8}-${GITHUB_RUN_NUMBER}"       >> $GITHUB_ENV
 env:
   CLONE_TOKEN: GIT_TOKEN_CUSTOM
   PUBLISH_TOKEN: PACKAGES_TOKEN
@@ -108,14 +107,6 @@ jobs:
             .
       - name: docker push
         run: docker push --all-tags ${{ env.APP_IMAGE }}
-
-  install-helm:
-    runs-on: ubuntu-latest
-    needs: [ app-configuration ]
-    steps:
-      - name: set-vars
-        run: |
-          echo KUBE_CONFIG="${{ needs.app-configuration.outputs.kube_config }}"  >> $GITHUB_ENV
       - name: connect to cluster
         uses: Azure/k8s-set-context@v2
         with:
