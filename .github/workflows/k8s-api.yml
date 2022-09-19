@@ -32,12 +32,6 @@ jobs:
       app-revision: ${{ steps.configure.outputs.app-name }}
       app-tag: ${{ steps.configure.outputs.app-tag }}
       app-image: ${{ steps.configure.outputs.app-image }}
-      app-config-name: ${{ steps.configure.outputs.app-config }}
-      kube-config: ${{ steps.configure.outputs.app-config.kube-config }}   
-      registry_addr: ${{ steps.configure.outputs.registry_addr }}
-      registry_name: ${{ steps.configure.outputs.registry_name }}
-      registry_usr: ${{ steps.configure.outputs.registry_usr }}
-      registry_pwd: ${{ steps.configure.outputs.registry_pwd }}
       app-config-b64: ${{ steps.parse-variables.outputs.app-config-b64 }} # This parses the env var form a complex yaml to scalar properties then convert b64 encode it
 
     steps:
@@ -52,6 +46,7 @@ jobs:
         run: |
           echo "ENVIRONMENT=PRD"                >> $GITHUB_ENV
           echo "ENVIRONMENT_LOWER=prd"          >> $GITHUB_ENV
+          APP_CONFIG="PRD_CONFIG"               >> $GITHUB_ENV
           echo "APP_REVISION=prd"               >> $GITHUB_ENV
 
       - name: hml
@@ -59,6 +54,7 @@ jobs:
         run: |
           echo "ENVIRONMENT=HML"                >> $GITHUB_ENV
           echo "ENVIRONMENT_LOWER=hml"          >> $GITHUB_ENV
+          APP_CONFIG="HML_CONFIG"               >> $GITHUB_ENV
           echo "APP_REVISION=hml"               >> $GITHUB_ENV
 
       - name: not prd or hml
@@ -67,54 +63,53 @@ jobs:
           REV_NAME=${GITHUB_REF_NAME,,}
           echo "ENVIRONMENT=DEV"                >> $GITHUB_ENV
           echo "ENVIRONMENT_LOWER=dev"          >> $GITHUB_ENV
+          APP_CONFIG="DEV_CONFIG"               >> $GITHUB_ENV
           echo "APP_REVISION=${REV_NAME//\//-}" >> $GITHUB_ENV
 
-      - name: configure
+      - name: set-variables
         run: |
           APP_NAME="${GITHUB_REPOSITORY/'Matrix-Energia/'/}"
           APP_NAME="${APP_NAME/matrix./}"
-          APP_NAME="${APP_NAME//./-}"
-          APP_TAG="${GITHUB_SHA:0:8}-${GITHUB_RUN_NUMBER}"
-          APP_IMAGE="${REGISTRY_NAME}/${GITHUB_REPOSITORY,,}"
-          APP_CONFIG="${ENVIRONMENT}_CONFIG"
-          KUBE_CONFIG="MATRIX_${ENVIRONMENT}_AKS_KUBE_CONFIG"
-          REGISTRY_NAME="${ENVIRONMENT_LOWER}akscr.azurecr.io"
-          REGISTRY_USR="MATRIX_${ENVIRONMENT}_ACR_USERNAME"
-          REGISTRY_PWD="MATRIX_${ENVIRONMENT}_ACR_PASSWORD"
+          APP_NAME="${APP_NAME//./-}"                           >> $GITHUB_ENV
+          APP_TAG="${GITHUB_SHA:0:8}-${GITHUB_RUN_NUMBER}"      >> $GITHUB_ENV
+          APP_IMAGE="${REGISTRY_NAME}/${GITHUB_REPOSITORY,,}"   >> $GITHUB_ENV        
+          KUBE_CONFIG="MATRIX_${ENVIRONMENT}_AKS_KUBE_CONFIG"   >> $GITHUB_ENV 
+          REGISTRY_NAME="${ENVIRONMENT_LOWER}akscr.azurecr.io"  >> $GITHUB_ENV 
+          REGISTRY_USR="MATRIX_${ENVIRONMENT}_ACR_USERNAME"     >> $GITHUB_ENV 
+          REGISTRY_PWD="MATRIX_${ENVIRONMENT}_ACR_PASSWORD"     >> $GITHUB_ENV 
+
+      - name: configure
+        run: |
           echo "::set-output name=environment::${ENVIRONMENT_LOWER}"
           echo "::set-output name=app-name::${APP_NAME}"
           echo "::set-output name=app-revision::${APP_REVISION}"
           echo "::set-output name=app-tag::${APP_TAG}"
           echo "::set-output name=app-image::${APP_IMAGE}"
-          echo "::set-output name=app-config-name::${APP_CONFIG}"
-          echo "::set-output name=kube-config::${KUBE_CONFIG}"
-          echo "::set-output name=registry_name::${REGISTRY_NAME}"
-          echo "::set-output name=registry_usr::${REGISTRY_USR}"
-          echo "::set-output name=registry_pwd::${REGISTRY_PWD}"
 
       - name: make yaml cfg plain
         id: parse-variables
         uses: mikefarah/yq@master
         with: 
           cmd: |
-            echo ${{ secrets[steps.configuration.outputs.app-config-name] }} > .cfg
-            cat app_cfg | base64 -d | yq e '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' - | base64 -w0 > .cfg
-            echo "::set-output name=app-config-b64::$(cat .cfg)"
+            echo ${{ secrets[env.APP_CONFIG] }} > .cfgComplex
+            cat .cfgComplex | base64 -d | yq e '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' - | base64 -w0 > .cfgFlat
+            echo "::set-output name=app-config-b64::$(cat .cfgFlat)"
+      
+      - name: connect to cluster
+        uses: Azure/k8s-set-context@v2
+        with:
+          kubeconfig: ${{ secrets[env.KUBE_CONFIG] }}
 
-  configure-docker:
-    runs-on: ubuntu-latest
-    needs: [ configuration ]
-    steps:
       - name: docker login
         uses: Azure/docker-login@v1
         with:
-          login-server: ${{ needs.configuration.outputs.registry_name }}
-          username: ${{ secrets[needs.configuration.outputs.registry_usr] }}
-          password: ${{ secrets[needs.configuration.outputs.registry_pwd] }}
-          
+          login-server: ${{ secrets[env.REGISTRY_NAME] }}
+          username: ${{ secrets[env.REGISTRY_USR] }}
+          password: ${{ secrets[env.REGISTRY_PWD] }}
+         
   build-and-push:
     runs-on: ubuntu-latest
-    needs: [ configuration, configure-docker ]
+    needs: [ configuration ]
     steps:
       - name: docker build
         run: |
@@ -126,18 +121,9 @@ jobs:
       - name: docker push
         run: docker push --all-tags ${{ needs.configuration.outputs.app-image }}
 
-  setup-k8s:
-    runs-on: ubuntu-latest
-    needs: [ configuration ]
-    steps:
-      - name: connect to cluster
-        uses: Azure/k8s-set-context@v2
-        with:
-          kubeconfig: ${{ secrets[steps.configuration.outputs.kube-config] }}
-
   setup-helm-tool:
     runs-on: ubuntu-latest
-    needs: [ configuration, setup-k8s ]
+    needs: [ configuration ]
     steps:
       - name: install helm tool
         uses: azure/setup-helm@v3
@@ -157,7 +143,7 @@ jobs:
 
   helm:
     runs-on: ubuntu-latest
-    needs: [ configuration, build-and-push, setup-k8s, setup-helm-tool, setup-helm-chart ]
+    needs: [ configuration, build-and-push, setup-helm-tool, setup-helm-chart ]
     steps:
       - name: install helm chart
         run: |
