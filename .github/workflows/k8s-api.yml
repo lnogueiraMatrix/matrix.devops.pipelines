@@ -1,5 +1,5 @@
 name: k8s Api v7
-
+# echo APP_TAG="${GITHUB_SHA:0:8}-${GITHUB_RUN_NUMBER}"       >> $GITHUB_ENV
 env:
   CLONE_TOKEN: GIT_TOKEN_CUSTOM
   PUBLISH_TOKEN: PACKAGES_TOKEN
@@ -52,20 +52,16 @@ jobs:
           echo "APP_REVISION=${REV_NAME//\//-}"     >> $GITHUB_ENV
 
       - name: set-vars
-        # echo APP_TAG="${GITHUB_SHA:0:8}-${GITHUB_RUN_NUMBER}"       >> $GITHUB_ENV
         run: |
           APP_NAME="${GITHUB_REPOSITORY/'Matrix-Energia/'/}"
           APP_NAME="${APP_NAME/matrix./}"
           APP_NAME="${APP_NAME//./-}"
           REGISTRY_NAME=${ENVIRONMENT,,}akscr.azurecr.io    
-        # shortcut
           echo ENVIRONMENT_LOWER="${ENVIRONMENT,,}"                   >> $GITHUB_ENV
-        # app vars
           echo APP_NAME="${APP_NAME}"                                 >> $GITHUB_ENV
           echo APP_CONFIG="${ENVIRONMENT}_CONFIG"                     >> $GITHUB_ENV    
           echo APP_IMAGE="${REGISTRY_NAME}/${GITHUB_REPOSITORY,,}"    >> $GITHUB_ENV
           echo APP_TAG="${GITHUB_SHA:0:8}"                            >> $GITHUB_ENV
-        # registries vars
           echo REGISTRY_NAME="${REGISTRY_NAME}"                       >> $GITHUB_ENV
           echo REGISTRY_USR="MATRIX_${ENVIRONMENT}_ACR_USERNAME"      >> $GITHUB_ENV 
           echo REGISTRY_PWD="MATRIX_${ENVIRONMENT}_ACR_PASSWORD"      >> $GITHUB_ENV 
