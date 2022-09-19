@@ -1,10 +1,12 @@
-name: build and deploy to k8s
+name: k8s Api
 
 env:
   HELM_VERSION: v3.9.2
+  CHART_REPOSITORY: 'Matrix-Energia/matrix.devops.template.charts.git'
   CHART_REVISION: v7
   CHART_PATH: charts
   CHART_TYPE: api
+  GIT_TOKEN_NAME: GIT_TOKEN_CUSTOM
 
 on:
   workflow_call:
@@ -25,89 +27,115 @@ on:
 jobs:
   configure:
     runs-on: ubuntu-latest
+    outputs:
+      app-name: ${{ steps.configuration.outputs.app-name }}
+      app-revision: ${{ steps.configuration.outputs.app-name }}
+      app-tag: ${{ steps.configuration.outputs.app-tag }}
+      app-image: ${{ steps.configuration.outputs.app-image }}
+      app-config: ${{ steps.configuration.outputs.app-config }}   
+      kube-config: ${{ steps.configuration.outputs.app-config.kube-config }}   
+      registry_addr: ${{ steps.configuration.outputs.registry_addr }}
+      registry_name: ${{ steps.configuration.outputs.registry_name }}
+      registry_usr: ${{ steps.configuration.outputs.registry_usr }}
+      registry_pwd: ${{ steps.configuration.outputs.registry_pwd }}
+
     steps:
       - name: checkout
         uses: actions/checkout@v3
         with:
           submodules: recursive
-          token: ${{ secrets.GIT_TOKEN_CUSTOM }}
+          token: ${{ secrets[env.GIT_TOKEN_NAME] }}
 
       - name: prd
         if: github.ref_name == 'main'
         run: |
-          echo "ENVIRONMENT=PRD" >> $GITHUB_ENV
-          echo "ENVIRONMENT_LOWER=prd" >> $GITHUB_ENV
-          echo "APP_REVISION=prd" >> $GITHUB_ENV
+          echo "ENVIRONMENT=PRD"                >> $GITHUB_ENV
+          echo "ENVIRONMENT_LOWER=prd"          >> $GITHUB_ENV
+          echo "APP_REVISION=prd"               >> $GITHUB_ENV
 
       - name: hml
         if: github.ref_name == 'hml'
         run: |
-          echo "ENVIRONMENT=HML" >> $GITHUB_ENV
-          echo "ENVIRONMENT_LOWER=hml" >> $GITHUB_ENV
-          echo "APP_REVISION=hml" >> $GITHUB_ENV
+          echo "ENVIRONMENT=HML"                >> $GITHUB_ENV
+          echo "ENVIRONMENT_LOWER=hml"          >> $GITHUB_ENV
+          echo "APP_REVISION=hml"               >> $GITHUB_ENV
 
       - name: not prd or hml
         if: ( github.ref_name != 'main' && github.ref_name != 'hml' )
         run: |
           REV_NAME=${GITHUB_REF_NAME,,}
-          echo "ENVIRONMENT=DEV" >> $GITHUB_ENV
-          echo "ENVIRONMENT_LOWER=dev" >> $GITHUB_ENV
+          echo "ENVIRONMENT=DEV"                >> $GITHUB_ENV
+          echo "ENVIRONMENT_LOWER=dev"          >> $GITHUB_ENV
           echo "APP_REVISION=${REV_NAME//\//-}" >> $GITHUB_ENV
 
-      - name: configure variables
+      - name: configuration
         run: |
-          REGISTRY_NAME=${ENVIRONMENT_LOWER}akscr.azurecr.io
-          APP_NAME=${GITHUB_REPOSITORY/'Matrix-Energia/'/}
-          APP_NAME=${APP_NAME/matrix./}
-          APP_NAME=${APP_NAME//./-}
-          SHORT_SHA=${GITHUB_SHA:0:8}
-          echo "APP_NAME=${APP_NAME}"                               >> $GITHUB_ENV
-          echo "KUBE_CONFIG=MATRIX_${ENVIRONMENT}_AKS_KUBE_CONFIG"  >> $GITHUB_ENV
-          echo "REGISTRY_NAME=${REGISTRY_NAME}"                     >> $GITHUB_ENV
-          echo "REGISTRY_PWD=MATRIX_${ENVIRONMENT}_ACR_PASSWORD"    >> $GITHUB_ENV
-          echo "REGISTRY_USR=MATRIX_${ENVIRONMENT}_ACR_USERNAME"    >> $GITHUB_ENV
-          echo "IMAGE=${REGISTRY_NAME}/${GITHUB_REPOSITORY,,}"      >> $GITHUB_ENV
-          echo "TAG=${SHORT_SHA}-${GITHUB_RUN_NUMBER}"              >> $GITHUB_ENV
-          echo "CONFIG=${ENVIRONMENT}_CONFIG"                       >> $GITHUB_ENV
+          APP_NAME="${GITHUB_REPOSITORY/'Matrix-Energia/'/}"
+          APP_NAME="${APP_NAME/matrix./}"
+          APP_NAME="${APP_NAME//./-}"
+          APP_TAG="${GITHUB_SHA:0:8}-${GITHUB_RUN_NUMBER}"
+          APP_IMAGE="${REGISTRY_NAME}/${GITHUB_REPOSITORY,,}"
+          APP_CONFIG="${ENVIRONMENT}_CONFIG"
+          KUBE_CONFIG="MATRIX_${ENVIRONMENT}_AKS_KUBE_CONFIG"
+          REGISTRY_NAME="${ENVIRONMENT_LOWER}akscr.azurecr.io"
+          REGISTRY_USR="MATRIX_${ENVIRONMENT}_ACR_USERNAME"
+          REGISTRY_PWD="MATRIX_${ENVIRONMENT}_ACR_PASSWORD"
+          echo "::set-output name=environment::${ENVIRONMENT_LOWER}"
+          echo "::set-output name=app-name::${APP_NAME}"
+          echo "::set-output name=app-revision::${APP_REVISION}"
+          echo "::set-output name=app-tag::${APP_TAG}"
+          echo "::set-output name=app-image::${APP_IMAGE}"
+          echo "::set-output name=app-config::${APP_CONFIG}"
+          echo "::set-output name=kube-config::${KUBE_CONFIG}"
+          echo "::set-output name=registry_name::${REGISTRY_NAME}"
+          echo "::set-output name=registry_usr::${REGISTRY_USR}"
+          echo "::set-output name=registry_pwd::${REGISTRY_PWD}"
+
+      - name: make yaml cfg plain
+        id: parse-variables
+        uses: mikefarah/yq@master
+        with: 
+          cmd: |
+            echo ${{ secrets[steps.configuration.outputs.app-config] }} | base64 -d | yq e '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' - | base64 -w0 > plainB64CFG
 
       - name: docker login
         uses: Azure/docker-login@v1
         with:
-          login-server: ${{ env.REGISTRY_NAME }}
-          username: ${{ secrets[env.REGISTRY_USR] }}
-          password: ${{ secrets[env.REGISTRY_PWD] }}
+          login-server: ${{ steps.configuration.outputs.registry_name }}
+          username: ${{ secrets[steps.configuration.outputs.registry_usr] }}
+          password: ${{ secrets[steps.configuration.outputs.registry_pwd] }}
 
       - name: connect to cluster
         uses: Azure/k8s-set-context@v2
         with:
-          kubeconfig: ${{ secrets[env.KUBE_CONFIG] }}
+          kubeconfig: ${{ secrets[steps.configuration.outputs.kube-config] }}
   
   build-and-push:
     runs-on: ubuntu-latest
-    needs: configure
+    needs: configuration
     steps:
       - name: docker build
         run: |
           docker build \
             --build-arg ${{ inputs.tokenName }}=${{ secrets.PACKAGES_TOKEN }} \
-            -t ${IMAGE}:${TAG} \
-            -t ${IMAGE}:latest \
+            -t ${{ needs.configuration.outputs.app-image }}:${{ needs.configuration.outputs.app-tag }} \
+            -t ${{ needs.configuration.outputs.app-image }}:latest \
             .
 
       - name: docker push
-        run: docker push --all-tags ${IMAGE}
+        run: docker push --all-tags ${{ needs.configuration.outputs.app-image }}
 
   configure-helm:
     runs-on: ubuntu-latest
-    needs: configure
+    needs: configuration
     steps:
       - name: clone helms
         uses: actions/checkout@v3
         with:
-          repository: 'Matrix-Energia/matrix.devops.template.charts.git'
+          repository: ${{ env.CHART_REPOSITORY }}
           ref: ${{ env.CHART_REVISION }}
           path: ${{ env.CHART_PATH }}
-          token: ${{ secrets.GIT_TOKEN_CUSTOM }}
+          token: ${{ secrets[env.GIT_TOKEN_NAME] }}
 
       - name: install helm tool
         uses: azure/setup-helm@v3
@@ -116,25 +144,18 @@ jobs:
 
   install-application:
     runs-on: ubuntu-latest
-    needs:  [ build-and-push, configure-helm ]
-    steps:
-      - name: query variables
-        id: parseEnvironmentVariables
-        uses: mikefarah/yq@master
-        with: 
-          cmd: |
-            echo ${{ secrets[env.CONFIG] }} | base64 -d | yq e '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' - | base64 -w0
-
+    needs:  [ configuration, build-and-push, configure-helm ]
+    steps:    
       - name: install helm chart
         run: |
-          helm upgrade ${{ env.APP_NAME }}-${{ env.APP_REVISION }} \
+          helm upgrade ${{ needs.configuration.outputs.app-name }}-${{ needs.configuration.outputs.app-revision }} \
             ${{ env.CHART_PATH }}/${{ env.CHART_TYPE }} \
             --install \
             --wait \
             --timeout 6m0s \
             --namespace '${{ inputs.namespace }}' \
             --values    '${{ inputs.values }}' \
-            --set       environment='${{ env.ENVIRONMENT_LOWER }}' \
-            --set       image='${{ env.IMAGE }}:${{ env.TAG }}' \
+            --set       environment='${{ needs.configuration.outputs.environment }}' \
+            --set       image='${{ needs.configuration.outputs.app-image }}:${{ needs.configuration.outputs.app-tag }}' \
             --set       repository='${{ github.repository }}' \
-            --set       config='${{ steps.parseEnvironmentVariables.outputs.result }}'
+            --set       config='${{ steps.parse-variables.outputs.result }}'
