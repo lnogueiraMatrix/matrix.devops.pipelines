@@ -125,7 +125,7 @@ jobs:
       - name: install helm chart
         run: |
           ls -lah
-          helm upgrade ${{ needs.app-configuration.outputs.name }}-${{ needs.app-configuration.outputs.revision }} \
+          helm upgrade ${{ steps.configure-app.outputs.name }}-${{ steps.configure-app.outputs.revision }} \
             ${{ env.CHART_PATH }}/${{ env.CHART_TYPE }} \
             --install \
             --wait \
