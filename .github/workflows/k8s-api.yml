@@ -66,7 +66,7 @@ jobs:
           echo "REGISTRY_PWD=MATRIX_${ENVIRONMENT}_ACR_PASSWORD"    >> $GITHUB_ENV
           echo "REGISTRY_USR=MATRIX_${ENVIRONMENT}_ACR_USERNAME"    >> $GITHUB_ENV
           echo "IMAGE=${REGISTRY_NAME}/${GITHUB_REPOSITORY,,}"      >> $GITHUB_ENV
-          echo "TAG=${GITHUB_SHA}"                                  >> $GITHUB_ENV
+          echo "TAG=${GITHUB_SHA}-${GITHUB_RUN_NUMBER}"             >> $GITHUB_ENV
           echo "CONFIG=${ENVIRONMENT}_CONFIG"                       >> $GITHUB_ENV
 
       - name: docker login
@@ -110,16 +110,18 @@ jobs:
         uses: mikefarah/yq@master
         with: 
           cmd: |
-            echo ${{ secrets[env.CONFIG] }} | yq e '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' - | base64 -w0
+            echo ${{ secrets[env.CONFIG] }} | base64 -d | yq e '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' - | base64 -w 0
 
       - name: install helm chart
         run: |
-          helm upgrade ${{ env.APP_NAME }}-${{ env.APP_REVISION }} \
-            ${{ env.CHART_PATH }}/${{ env.CHART_TYPE }} \
+          helm upgrade \
             --install \
             --wait \
             --namespace ${{ inputs.namespace }} \
             --values ${{ inputs.values }} \
             --set environment=${{ env.ENVIRONMENT_LOWER }} \
             --set image=${{ env.IMAGE }}:${{ env.TAG }} \
-            --set config=${{ steps.parseEnvironmentVariables.outputs.result }}
+            --set config=${{ steps.parseEnvironmentVariables.outputs.result }} \
+            --set repository=${{ env.GITHUB_REPOSITORY }} \
+            ${{ env.APP_NAME }}-${{ env.APP_REVISION }} \
+            ${{ env.CHART_PATH }}/${{ env.CHART_TYPE }}
