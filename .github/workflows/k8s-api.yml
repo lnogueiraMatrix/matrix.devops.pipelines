@@ -132,7 +132,7 @@ jobs:
             --timeout 6m0s \
             --namespace '${{ inputs.namespace }}' \
             --values    '${{ inputs.values }}' \
-            --set       environment='${{ needs.app-configuration.outputs.environment }}' \
-            --set       image='${{ needs.app-configuration.outputs.image }}:${{ needs.app-configuration.outputs.tag }}' \
+            --set       environment='${{ steps.configure-app.outputs.environment }}' \
+            --set       image='${{ teps.configure-app.outputs.image }}:${{ teps.configure-app.outputs.tag }}' \
             --set       repository='${{ github.repository }}' \
-            --set       config='${{ needs.app-configuration.outputs.config-b64 }}'
+            --set       config='${{ teps.configure-app.outputs.config_b64 }}'
