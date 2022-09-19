@@ -115,7 +115,7 @@ jobs:
     steps:
       - name: set-vars
         run: |
-          echo KUBE_CONFIG="MATRIX_${{ needs.app-configuration.outputs.kube_config }}_AKS_KUBE_CONFIG"  >> $GITHUB_ENV
+          echo KUBE_CONFIG="${{ needs.app-configuration.outputs.kube_config }}"  >> $GITHUB_ENV
       - name: connect to cluster
         uses: Azure/k8s-set-context@v2
         with:
