@@ -35,12 +35,6 @@ jobs:
       config-b64: ${{ steps.parse-variables.outputs.config-b64 }} # This parses the env var form a complex yaml to scalar properties then convert b64 encode it
 
     steps:
-      - name: checkout
-        uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          token: ${{ secrets[env.GIT_TOKEN_NAME] }}
-
       - name: prd
         if: github.ref_name == 'main'
         run: |
@@ -109,6 +103,13 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ app-configuration ]
     steps:
+
+      - name: checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ secrets[env.GIT_TOKEN_NAME] }}
+
       - name: docker build
         run: |
           ls -lah
@@ -146,6 +147,7 @@ jobs:
     steps:
       - name: install helm chart
         run: |
+          ls -lah
           helm upgrade ${{ needs.app-configuration.outputs.name }}-${{ needs.app-configuration.outputs.revision }} \
             ${{ env.CHART_PATH }}/${{ env.CHART_TYPE }} \
             --install \
