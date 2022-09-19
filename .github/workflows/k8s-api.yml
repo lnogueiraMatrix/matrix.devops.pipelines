@@ -69,6 +69,7 @@ jobs:
           echo "APP_REVISION=${REV_NAME//\//-}" >> $GITHUB_ENV
 
       - name: configuration
+        id: configuration
         run: |
           APP_NAME="${GITHUB_REPOSITORY/'Matrix-Energia/'/}"
           APP_NAME="${APP_NAME/matrix./}"
