@@ -1,12 +1,8 @@
-name: k8s Api
+name: k8s Api v7
 
 env:
-  HELM_VERSION: v3.9.2
-  CHART_REPOSITORY: 'Matrix-Energia/matrix.devops.template.charts.git'
-  CHART_REVISION: v7
-  CHART_PATH: charts
-  CHART_TYPE: api
-  GIT_TOKEN_NAME: GIT_TOKEN_CUSTOM
+  CLONE_TOKEN: GIT_TOKEN_CUSTOM
+  PUBLISH_TOKEN: PACKAGES_TOKEN
 
 on:
   workflow_call:
@@ -31,7 +27,11 @@ jobs:
       name: ${{ steps.configure-app.outputs.name }}
       revision: ${{ steps.configure-app.outputs.name }}
       tag: ${{ steps.configure-app.outputs.tag }}
-      image: ${{ steps.configure-app.outputs.image }}
+      image: ${{ steps.configure-app.outputs.image }}      
+      registry-name: ${{ steps.configure-app.outputs.registry-name }}
+      registry-usr: ${{ steps.configure-app.outputs.registry-usr }}
+      registry-pwd: ${{ steps.configure-app.outputs.registry-pwd }}
+      kube-config: ${{ steps.configure-app.outputs.kube-config }}
       config-b64: ${{ steps.parse-variables.outputs.config-b64 }} # This parses the env var form a complex yaml to scalar properties then convert b64 encode it
 
     steps:
@@ -40,13 +40,11 @@ jobs:
         run: |
           echo "ENVIRONMENT=PRD"                    >> $GITHUB_ENV
           echo "APP_REVISION=prd"                   >> $GITHUB_ENV
-
       - name: hml
         if: github.ref_name == 'hml'
         run: |
           echo "ENVIRONMENT=HML"                    >> $GITHUB_ENV
           echo "APP_REVISION=hml"                   >> $GITHUB_ENV
-
       - name: not prd or hml
         if: ( github.ref_name != 'main' && github.ref_name != 'hml' )
         run: |
@@ -54,7 +52,8 @@ jobs:
           echo "ENVIRONMENT=DEV"                    >> $GITHUB_ENV                  
           echo "APP_REVISION=${REV_NAME//\//-}"     >> $GITHUB_ENV
 
-      - name: set-variables
+      - name: set-vars
+        # echo APP_TAG="${GITHUB_SHA:0:8}-${GITHUB_RUN_NUMBER}"       >> $GITHUB_ENV
         run: |
           export REGISTRY_NAME=${ENVIRONMENT_LOWER}akscr.azurecr.io    
           export APP_NAME="${GITHUB_REPOSITORY/'Matrix-Energia/'/}"
@@ -64,12 +63,12 @@ jobs:
           echo REGISTRY_USR="MATRIX_${ENVIRONMENT}_ACR_USERNAME"      >> $GITHUB_ENV 
           echo REGISTRY_PWD="MATRIX_${ENVIRONMENT}_ACR_PASSWORD"      >> $GITHUB_ENV 
           echo APP_IMAGE="${REGISTRY_NAME}/${GITHUB_REPOSITORY,,}"    >> $GITHUB_ENV
-          echo APP_TAG="${GITHUB_SHA:0:8}-${GITHUB_RUN_NUMBER}"       >> $GITHUB_ENV
+          echo APP_TAG="${GITHUB_SHA:0:8}"                            >> $GITHUB_ENV
           echo APP_CONFIG="${ENVIRONMENT}_CONFIG"                     >> $GITHUB_ENV    
           echo KUBE_CONFIG="MATRIX_${ENVIRONMENT}_AKS_KUBE_CONFIG"    >> $GITHUB_ENV 
           echo ENVIRONMENT_LOWER="${ENVIRONMENT,,}"                   >> $GITHUB_ENV
 
-      - name: Configure app
+      - name: configure app
         id: configure-app
         run: |
           echo "::set-output name=environment::${{ env.ENVIRONMENT_LOWER }}"
@@ -77,6 +76,10 @@ jobs:
           echo "::set-output name=revision::${{ env.APP_REVISION }}"
           echo "::set-output name=tag::${{ env.APP_TAG }}"
           echo "::set-output name=image::${{ env.APP_IMAGE }}"
+          echo "::set-output name=registry-name::${{ env.REGISTRY_NAME }}"
+          echo "::set-output name=registry-usr::${{ env.REGISTRY_USR }}"
+          echo "::set-output name=registry-pwd::${{ env.REGISTRY_PWD }}"
+          echo "::set-output name=kube-config::${{ env.KUBE_CONFIG }}"
 
       - name: make yaml cfg plain
         id: parse-variables
@@ -87,64 +90,64 @@ jobs:
             cat .cfgComplex | base64 -d | yq e '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' - | base64 -w0 > .cfgFlat
             echo "::set-output name=config-b64::$(cat .cfgFlat)"
       
-      - name: connect to cluster
-        uses: Azure/k8s-set-context@v2
-        with:
-          kubeconfig: ${{ secrets[env.KUBE_CONFIG] }}
-
+  build-and-push:
+    runs-on: ubuntu-latest
+    needs: [ app-configuration ]
+    steps:
+      - name: set-vars
+        run: |        
+          echo REGISTRY_NAME=${{ needs.app-configuration.outputs.registry-name }}  >> $GITHUB_ENV
+          echo REGISTRY_USR=${{ needs.app-configuration.outputs.registry-usr }}    >> $GITHUB_ENV
+          echo REGISTRY_PWD=${{ needs.app-configuration.outputs.registry-pwd }}    >> $GITHUB_ENV
       - name: docker login
         uses: Azure/docker-login@v1
         with:
           login-server: ${{ env.REGISTRY_NAME }}
           username: ${{ secrets[env.REGISTRY_USR] }}
           password: ${{ secrets[env.REGISTRY_PWD] }}
-         
-  build-and-push:
-    runs-on: ubuntu-latest
-    needs: [ app-configuration ]
-    steps:
-
       - name: checkout
         uses: actions/checkout@v3
         with:
           submodules: recursive
-          token: ${{ secrets[env.GIT_TOKEN_NAME] }}
-
+          token: ${{ secrets.GIT_TOKEN_CUSTOM }}
       - name: docker build
         run: |
-          ls -lah
           docker build \
             --build-arg ${{ inputs.tokenName }}=${{ secrets.PACKAGES_TOKEN }} \
             -t "${{ needs.app-configuration.outputs.image }}:${{ needs.app-configuration.outputs.tag }}" \
             -t "${{ needs.app-configuration.outputs.image }}:latest" \
             .
-
       - name: docker push
         run: docker push --all-tags ${{ needs.app-configuration.outputs.image }}
 
-  setup-helm-tool:
+  install-helm:
     runs-on: ubuntu-latest
+    needs: [ app-configuration, build-and-push ]
+    env:
+      HELM_VERSION: v3.9.2
+      CHART_REPOSITORY: 'Matrix-Energia/matrix.devops.template.charts.git'
+      CHART_REVISION: v7
+      CHART_PATH: charts
+      CHART_TYPE: api
     steps:
+      - name: set-vars
+        run: |
+          echo KUBE_CONFIG=${{ needs.app-configuration.outputs.kube-config }}  >> $GITHUB_ENV
+      - name: connect to cluster
+        uses: Azure/k8s-set-context@v2
+        with:
+          kubeconfig: ${{ secrets[env.KUBE_CONFIG] }}
       - name: install helm tool
         uses: azure/setup-helm@v3
         with:
           version: ${{ env.HELM_VERSION }}
-
-  setup-helm-chart:
-    runs-on: ubuntu-latest
-    steps:
       - name: clone helms
         uses: actions/checkout@v3
         with:
           repository: ${{ env.CHART_REPOSITORY }}
           ref: ${{ env.CHART_REVISION }}
           path: ${{ env.CHART_PATH }}
-          token: ${{ secrets[env.GIT_TOKEN_NAME] }}
-
-  install-helm:
-    runs-on: ubuntu-latest
-    needs: [ app-configuration, build-and-push, setup-helm-tool, setup-helm-chart ]
-    steps:
+          token: ${{ secrets[env.CLONE_TOKEN] }}
       - name: install helm chart
         run: |
           ls -lah
