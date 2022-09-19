@@ -65,13 +65,13 @@ jobs:
           APP_NAME="${GITHUB_REPOSITORY/'Matrix-Energia/'/}"
           APP_NAME="${APP_NAME/matrix./}"
           echo APP_NAME="${APP_NAME//./-}"                            >> $GITHUB_ENV
+          echo REGISTRY_NAME="${ENVIRONMENT,,}akscr.azurecr.io"       >> $GITHUB_ENV 
+          echo REGISTRY_USR="MATRIX_${ENVIRONMENT}_ACR_USERNAME"      >> $GITHUB_ENV 
+          echo REGISTRY_PWD="MATRIX_${ENVIRONMENT}_ACR_PASSWORD"      >> $GITHUB_ENV 
           echo APP_TAG="${GITHUB_SHA:0:8}-${GITHUB_RUN_NUMBER}"       >> $GITHUB_ENV
           echo APP_IMAGE="${REGISTRY_NAME}/${GITHUB_REPOSITORY,,}"    >> $GITHUB_ENV
           echo APP_CONFIG="${ENVIRONMENT}_CONFIG"                     >> $GITHUB_ENV    
           echo KUBE_CONFIG="MATRIX_${ENVIRONMENT}_AKS_KUBE_CONFIG"    >> $GITHUB_ENV 
-          echo REGISTRY_NAME="${ENVIRONMENT,,}akscr.azurecr.io"       >> $GITHUB_ENV 
-          echo REGISTRY_USR="MATRIX_${ENVIRONMENT}_ACR_USERNAME"      >> $GITHUB_ENV 
-          echo REGISTRY_PWD="MATRIX_${ENVIRONMENT}_ACR_PASSWORD"      >> $GITHUB_ENV 
           echo ENVIRONMENT_LOWER="${ENVIRONMENT,,}"                   >> $GITHUB_ENV
 
       - name: Configure app
@@ -121,7 +121,6 @@ jobs:
 
   setup-helm-tool:
     runs-on: ubuntu-latest
-    needs: [ app-configuration ]
     steps:
       - name: install helm tool
         uses: azure/setup-helm@v3
