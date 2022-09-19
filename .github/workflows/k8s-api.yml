@@ -56,8 +56,9 @@ jobs:
           APP_NAME="${GITHUB_REPOSITORY/'Matrix-Energia/'/}"
           APP_NAME="${APP_NAME/matrix./}"
           APP_NAME="${APP_NAME//./-}"
-          REGISTRY_NAME=${ENVIRONMENT,,}akscr.azurecr.io    
-          echo ENVIRONMENT_LOWER="${ENVIRONMENT,,}"                   >> $GITHUB_ENV
+          ENVIRONMENT_LOWER="${ENVIRONMENT,,}"
+          REGISTRY_NAME="${ENVIRONMENT_LOWER}akscr.azurecr.io"
+          echo ENVIRONMENT_LOWER="${ENVIRONMENT_LOWER}"               >> $GITHUB_ENV
           echo APP_NAME="${APP_NAME}"                                 >> $GITHUB_ENV
           echo APP_CONFIG="${ENVIRONMENT}_CONFIG"                     >> $GITHUB_ENV    
           echo APP_IMAGE="${REGISTRY_NAME}/${GITHUB_REPOSITORY,,}"    >> $GITHUB_ENV
