@@ -25,19 +25,20 @@ on:
         default: GIT_TOKEN
 
 jobs:
-  configure:
+  configuration:
     runs-on: ubuntu-latest
     outputs:
-      app-name: ${{ steps.configuration.outputs.app-name }}
-      app-revision: ${{ steps.configuration.outputs.app-name }}
-      app-tag: ${{ steps.configuration.outputs.app-tag }}
-      app-image: ${{ steps.configuration.outputs.app-image }}
-      app-config: ${{ steps.configuration.outputs.app-config }}   
-      kube-config: ${{ steps.configuration.outputs.app-config.kube-config }}   
-      registry_addr: ${{ steps.configuration.outputs.registry_addr }}
-      registry_name: ${{ steps.configuration.outputs.registry_name }}
-      registry_usr: ${{ steps.configuration.outputs.registry_usr }}
-      registry_pwd: ${{ steps.configuration.outputs.registry_pwd }}
+      app-name: ${{ steps.configure.outputs.app-name }}
+      app-revision: ${{ steps.configure.outputs.app-name }}
+      app-tag: ${{ steps.configure.outputs.app-tag }}
+      app-image: ${{ steps.configure.outputs.app-image }}
+      app-config-name: ${{ steps.configure.outputs.app-config }}
+      kube-config: ${{ steps.configure.outputs.app-config.kube-config }}   
+      registry_addr: ${{ steps.configure.outputs.registry_addr }}
+      registry_name: ${{ steps.configure.outputs.registry_name }}
+      registry_usr: ${{ steps.configure.outputs.registry_usr }}
+      registry_pwd: ${{ steps.configure.outputs.registry_pwd }}
+      app-config-b64: ${{ steps.parse-variables.outputs.app-config-b64 }} # This parses the env var form a complex yaml to scalar properties then convert b64 encode it
 
     steps:
       - name: checkout
@@ -68,8 +69,7 @@ jobs:
           echo "ENVIRONMENT_LOWER=dev"          >> $GITHUB_ENV
           echo "APP_REVISION=${REV_NAME//\//-}" >> $GITHUB_ENV
 
-      - name: configuration
-        id: configuration
+      - name: configure
         run: |
           APP_NAME="${GITHUB_REPOSITORY/'Matrix-Energia/'/}"
           APP_NAME="${APP_NAME/matrix./}"
@@ -86,7 +86,7 @@ jobs:
           echo "::set-output name=app-revision::${APP_REVISION}"
           echo "::set-output name=app-tag::${APP_TAG}"
           echo "::set-output name=app-image::${APP_IMAGE}"
-          echo "::set-output name=app-config::${APP_CONFIG}"
+          echo "::set-output name=app-config-name::${APP_CONFIG}"
           echo "::set-output name=kube-config::${KUBE_CONFIG}"
           echo "::set-output name=registry_name::${REGISTRY_NAME}"
           echo "::set-output name=registry_usr::${REGISTRY_USR}"
@@ -97,23 +97,24 @@ jobs:
         uses: mikefarah/yq@master
         with: 
           cmd: |
-            echo ${{ secrets[steps.configuration.outputs.app-config] }} | base64 -d | yq e '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' - | base64 -w0 > plainB64CFG
+            echo ${{ secrets[steps.configuration.outputs.app-config-name] }} > .cfg
+            cat app_cfg | base64 -d | yq e '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' - | base64 -w0 > .cfg
+            echo "::set-output name=app-config-b64::$(cat .cfg)"
 
+  configure-docker:
+    runs-on: ubuntu-latest
+    needs: [ configuration ]
+    steps:
       - name: docker login
         uses: Azure/docker-login@v1
         with:
-          login-server: ${{ steps.configuration.outputs.registry_name }}
-          username: ${{ secrets[steps.configuration.outputs.registry_usr] }}
-          password: ${{ secrets[steps.configuration.outputs.registry_pwd] }}
-
-      - name: connect to cluster
-        uses: Azure/k8s-set-context@v2
-        with:
-          kubeconfig: ${{ secrets[steps.configuration.outputs.kube-config] }}
-  
+          login-server: ${{ needs.configuration.outputs.registry_name }}
+          username: ${{ secrets[needs.configuration.outputs.registry_usr] }}
+          password: ${{ secrets[needs.configuration.outputs.registry_pwd] }}
+          
   build-and-push:
     runs-on: ubuntu-latest
-    needs: configuration
+    needs: [ configuration, configure-docker ]
     steps:
       - name: docker build
         run: |
@@ -122,13 +123,29 @@ jobs:
             -t ${{ needs.configuration.outputs.app-image }}:${{ needs.configuration.outputs.app-tag }} \
             -t ${{ needs.configuration.outputs.app-image }}:latest \
             .
-
       - name: docker push
         run: docker push --all-tags ${{ needs.configuration.outputs.app-image }}
 
-  configure-helm:
+  setup-k8s:
     runs-on: ubuntu-latest
-    needs: configuration
+    needs: [ configuration ]
+    steps:
+      - name: connect to cluster
+        uses: Azure/k8s-set-context@v2
+        with:
+          kubeconfig: ${{ secrets[steps.configuration.outputs.kube-config] }}
+
+  setup-helm-tool:
+    runs-on: ubuntu-latest
+    needs: [ configuration, setup-k8s ]
+    steps:
+      - name: install helm tool
+        uses: azure/setup-helm@v3
+        with:
+          version: ${{ env.HELM_VERSION }}
+
+  setup-helm-chart:
+    runs-on: ubuntu-latest
     steps:
       - name: clone helms
         uses: actions/checkout@v3
@@ -138,15 +155,10 @@ jobs:
           path: ${{ env.CHART_PATH }}
           token: ${{ secrets[env.GIT_TOKEN_NAME] }}
 
-      - name: install helm tool
-        uses: azure/setup-helm@v3
-        with:
-          version: ${{ env.HELM_VERSION }}
-
-  install-application:
+  helm:
     runs-on: ubuntu-latest
-    needs:  [ configuration, build-and-push, configure-helm ]
-    steps:    
+    needs: [ configuration, build-and-push, setup-k8s, setup-helm-tool, setup-helm-chart ]
+    steps:
       - name: install helm chart
         run: |
           helm upgrade ${{ needs.configuration.outputs.app-name }}-${{ needs.configuration.outputs.app-revision }} \
@@ -159,4 +171,4 @@ jobs:
             --set       environment='${{ needs.configuration.outputs.environment }}' \
             --set       image='${{ needs.configuration.outputs.app-image }}:${{ needs.configuration.outputs.app-tag }}' \
             --set       repository='${{ github.repository }}' \
-            --set       config='${{ steps.parse-variables.outputs.result }}'
+            --set       config='${{ needs.configuration.outputs.app-config-b64 }}'
