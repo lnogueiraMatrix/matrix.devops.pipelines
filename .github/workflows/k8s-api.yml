@@ -133,6 +133,6 @@ jobs:
             --namespace '${{ inputs.namespace }}' \
             --values    '${{ inputs.values }}' \
             --set       environment='${{ steps.configure-app.outputs.environment }}' \
-            --set       image='${{ teps.configure-app.outputs.image }}:${{ teps.configure-app.outputs.tag }}' \
+            --set       image='${{ steps.configure-app.outputs.image }}:${{ steps.configure-app.outputs.tag }}' \
             --set       repository='${{ github.repository }}' \
-            --set       config='${{ teps.configure-app.outputs.config_b64 }}'
+            --set       config='${{ steps.configure-app.outputs.config_b64 }}'
