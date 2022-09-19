@@ -46,28 +46,27 @@ jobs:
         run: |
           echo "ENVIRONMENT=PRD"                    >> $GITHUB_ENV
           echo "APP_REVISION=prd"                   >> $GITHUB_ENV
-          echo REGISTRY_NAME="prdakscr.azurecr.io"  >> $GITHUB_ENV
 
       - name: hml
         if: github.ref_name == 'hml'
         run: |
           echo "ENVIRONMENT=HML"                    >> $GITHUB_ENV
           echo "APP_REVISION=hml"                   >> $GITHUB_ENV
-          echo REGISTRY_NAME="hmlakscr.azurecr.io"  >> $GITHUB_ENV
 
       - name: not prd or hml
         if: ( github.ref_name != 'main' && github.ref_name != 'hml' )
         run: |
           REV_NAME=${GITHUB_REF_NAME,,}
           echo "ENVIRONMENT=DEV"                    >> $GITHUB_ENV                  
-          echo REGISTRY_NAME="devakscr.azurecr.io"  >> $GITHUB_ENV
           echo "APP_REVISION=${REV_NAME//\//-}"     >> $GITHUB_ENV
 
       - name: set-variables
-        run: |          
-          APP_NAME="${GITHUB_REPOSITORY/'Matrix-Energia/'/}"
-          APP_NAME="${APP_NAME/matrix./}"
+        run: |
+          export REGISTRY_NAME=${ENVIRONMENT_LOWER}akscr.azurecr.io    
+          export APP_NAME="${GITHUB_REPOSITORY/'Matrix-Energia/'/}"
+          export APP_NAME="${APP_NAME/matrix./}"
           echo APP_NAME="${APP_NAME//./-}"                            >> $GITHUB_ENV
+          echo REGISTRY_NAME="${REGISTRY_NAME}"                       >> $GITHUB_ENV
           echo REGISTRY_USR="MATRIX_${ENVIRONMENT}_ACR_USERNAME"      >> $GITHUB_ENV 
           echo REGISTRY_PWD="MATRIX_${ENVIRONMENT}_ACR_PASSWORD"      >> $GITHUB_ENV 
           echo APP_IMAGE="${REGISTRY_NAME}/${GITHUB_REPOSITORY,,}"    >> $GITHUB_ENV
@@ -114,8 +113,8 @@ jobs:
         run: |
           docker build \
             --build-arg ${{ inputs.tokenName }}=${{ secrets.PACKAGES_TOKEN }} \
-            -t ${{ needs.app-configuration.outputs.image }}:${{ needs.app-configuration.outputs.tag }} \
-            -t ${{ needs.app-configuration.outputs.image }}:latest \
+            -t "${{ needs.app-configuration.outputs.image }}:${{ needs.app-configuration.outputs.tag }}" \
+            -t "${{ needs.app-configuration.outputs.image }}:latest" \
             .
 
       - name: docker push
