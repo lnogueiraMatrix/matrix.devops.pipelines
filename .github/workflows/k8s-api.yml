@@ -45,36 +45,34 @@ jobs:
         if: github.ref_name == 'main'
         run: |
           echo "ENVIRONMENT=PRD"                >> $GITHUB_ENV
-          echo "ENVIRONMENT_LOWER=prd"          >> $GITHUB_ENV
           echo "APP_REVISION=prd"               >> $GITHUB_ENV
 
       - name: hml
         if: github.ref_name == 'hml'
         run: |
           echo "ENVIRONMENT=HML"                >> $GITHUB_ENV
-          echo "ENVIRONMENT_LOWER=hml"          >> $GITHUB_ENV
           echo "APP_REVISION=hml"               >> $GITHUB_ENV
 
       - name: not prd or hml
         if: ( github.ref_name != 'main' && github.ref_name != 'hml' )
         run: |
           REV_NAME=${GITHUB_REF_NAME,,}
-          echo "ENVIRONMENT=DEV"                >> $GITHUB_ENV
-          echo "ENVIRONMENT_LOWER=dev"          >> $GITHUB_ENV          
+          echo "ENVIRONMENT=DEV"                >> $GITHUB_ENV                  
           echo "APP_REVISION=${REV_NAME//\//-}" >> $GITHUB_ENV
 
       - name: set-variables
         run: |
           APP_NAME="${GITHUB_REPOSITORY/'Matrix-Energia/'/}"
           APP_NAME="${APP_NAME/matrix./}"
-          echo APP_NAME="${APP_NAME//./-}"                           >> $GITHUB_ENV
-          echo APP_TAG="${GITHUB_SHA:0:8}-${GITHUB_RUN_NUMBER}"      >> $GITHUB_ENV
-          echo APP_IMAGE="${REGISTRY_NAME}/${GITHUB_REPOSITORY,,}"   >> $GITHUB_ENV
-          echo APP_CONFIG="DEV_CONFIG"                               >> $GITHUB_ENV    
-          echo KUBE_CONFIG="MATRIX_${ENVIRONMENT}_AKS_KUBE_CONFIG"   >> $GITHUB_ENV 
-          echo REGISTRY_NAME="${ENVIRONMENT_LOWER}akscr.azurecr.io"  >> $GITHUB_ENV 
-          echo REGISTRY_USR="MATRIX_${ENVIRONMENT}_ACR_USERNAME"     >> $GITHUB_ENV 
-          echo REGISTRY_PWD="MATRIX_${ENVIRONMENT}_ACR_PASSWORD"     >> $GITHUB_ENV 
+          echo APP_NAME="${APP_NAME//./-}"                            >> $GITHUB_ENV
+          echo APP_TAG="${GITHUB_SHA:0:8}-${GITHUB_RUN_NUMBER}"       >> $GITHUB_ENV
+          echo APP_IMAGE="${REGISTRY_NAME}/${GITHUB_REPOSITORY,,}"    >> $GITHUB_ENV
+          echo APP_CONFIG="${ENVIRONMENT}_CONFIG"                     >> $GITHUB_ENV    
+          echo KUBE_CONFIG="MATRIX_${ENVIRONMENT}_AKS_KUBE_CONFIG"    >> $GITHUB_ENV 
+          echo REGISTRY_NAME="${ENVIRONMENT,,}akscr.azurecr.io"       >> $GITHUB_ENV 
+          echo REGISTRY_USR="MATRIX_${ENVIRONMENT}_ACR_USERNAME"      >> $GITHUB_ENV 
+          echo REGISTRY_PWD="MATRIX_${ENVIRONMENT}_ACR_PASSWORD"      >> $GITHUB_ENV 
+          echo ENVIRONMENT_LOWER="${ENVIRONMENT,,}"                   >> $GITHUB_ENV
 
       - name: configure
         run: |
@@ -101,7 +99,7 @@ jobs:
       - name: docker login
         uses: Azure/docker-login@v1
         with:
-          login-server: ${{ secrets[env.REGISTRY_NAME] }}
+          login-server: ${{ env.REGISTRY_NAME }}
           username: ${{ secrets[env.REGISTRY_USR] }}
           password: ${{ secrets[env.REGISTRY_PWD] }}
          
