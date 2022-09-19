@@ -23,7 +23,7 @@ on:
         default: GIT_TOKEN
 
 jobs:
-  build-and-deploy:
+  configure:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
@@ -77,6 +77,15 @@ jobs:
           username: ${{ secrets[env.REGISTRY_USR] }}
           password: ${{ secrets[env.REGISTRY_PWD] }}
 
+      - name: connect to cluster
+        uses: Azure/k8s-set-context@v2
+        with:
+          kubeconfig: ${{ secrets[env.KUBE_CONFIG] }}
+  
+  build-and-push:
+    runs-on: ubuntu-latest
+    needs: configure
+    steps:
       - name: docker build
         run: |
           docker build \
@@ -88,6 +97,10 @@ jobs:
       - name: docker push
         run: docker push --all-tags ${IMAGE}
 
+  configure-helm:
+    runs-on: ubuntu-latest
+    needs: configure
+    steps:
       - name: clone helms
         uses: actions/checkout@v3
         with:
@@ -96,16 +109,15 @@ jobs:
           path: ${{ env.CHART_PATH }}
           token: ${{ secrets.GIT_TOKEN_CUSTOM }}
 
-      - name: connect to cluster
-        uses: Azure/k8s-set-context@v2
-        with:
-          kubeconfig: ${{ secrets[env.KUBE_CONFIG] }}
-
       - name: install helm tool
         uses: azure/setup-helm@v3
         with:
           version: ${{ env.HELM_VERSION }}
 
+  install-application:
+    runs-on: ubuntu-latest
+    needs:  [ build-and-push, configure-helm ]
+    steps:
       - name: query variables
         id: parseEnvironmentVariables
         uses: mikefarah/yq@master
@@ -119,6 +131,7 @@ jobs:
             ${{ env.CHART_PATH }}/${{ env.CHART_TYPE }} \
             --install \
             --wait \
+            --timeout 6m0s \
             --namespace '${{ inputs.namespace }}' \
             --values    '${{ inputs.values }}' \
             --set       environment='${{ env.ENVIRONMENT_LOWER }}' \
