@@ -26,13 +26,13 @@ jobs:
     outputs:
       name: ${{ steps.configure-app.outputs.name }}
       revision: ${{ steps.configure-app.outputs.name }}
+      image: ${{ steps.configure-app.outputs.image }}
       tag: ${{ steps.configure-app.outputs.tag }}
-      image: ${{ steps.configure-app.outputs.image }}      
-      registry-name: ${{ steps.configure-app.outputs.registry-name }}
-      registry-usr: ${{ steps.configure-app.outputs.registry-usr }}
-      registry-pwd: ${{ steps.configure-app.outputs.registry-pwd }}
-      kube-config: ${{ steps.configure-app.outputs.kube-config }}
-      config-b64: ${{ steps.parse-variables.outputs.config-b64 }} # This parses the env var form a complex yaml to scalar properties then convert b64 encode it
+      registry-name: ${{ steps.configure-creds.outputs.registry-name }}
+      registry-usr: ${{ steps.configure-creds.outputs.registry-usr }}
+      registry-pwd: ${{ steps.configure-creds.outputs.registry-pwd }}
+      kube-config: ${{ steps.configure-creds.outputs.kube-config }}
+      config-b64: ${{ steps.parse-variables.outputs.config-b64 }}
     steps:
       - name: prd
         if: github.ref_name == 'main'
@@ -54,18 +54,22 @@ jobs:
       - name: set-vars
         # echo APP_TAG="${GITHUB_SHA:0:8}-${GITHUB_RUN_NUMBER}"       >> $GITHUB_ENV
         run: |
-          export REGISTRY_NAME=${ENVIRONMENT,,}akscr.azurecr.io    
-          export APP_NAME="${GITHUB_REPOSITORY/'Matrix-Energia/'/}"
-          export APP_NAME="${APP_NAME/matrix./}"
-          echo APP_NAME="${APP_NAME//./-}"                            >> $GITHUB_ENV
+          APP_NAME="${GITHUB_REPOSITORY/'Matrix-Energia/'/}"
+          APP_NAME="${APP_NAME/matrix./}"
+          APP_NAME="${APP_NAME//./-}"
+          REGISTRY_NAME=${ENVIRONMENT,,}akscr.azurecr.io    
+        # shortcut
+          echo ENVIRONMENT_LOWER="${ENVIRONMENT,,}"                   >> $GITHUB_ENV
+        # app vars
+          echo APP_NAME="${APP_NAME}"                                 >> $GITHUB_ENV
+          echo APP_CONFIG="${ENVIRONMENT}_CONFIG"                     >> $GITHUB_ENV    
+          echo APP_IMAGE="${REGISTRY_NAME}/${GITHUB_REPOSITORY,,}"    >> $GITHUB_ENV
+          echo APP_TAG="${GITHUB_SHA:0:8}"                            >> $GITHUB_ENV
+        # registries vars
           echo REGISTRY_NAME="${REGISTRY_NAME}"                       >> $GITHUB_ENV
           echo REGISTRY_USR="MATRIX_${ENVIRONMENT}_ACR_USERNAME"      >> $GITHUB_ENV 
           echo REGISTRY_PWD="MATRIX_${ENVIRONMENT}_ACR_PASSWORD"      >> $GITHUB_ENV 
-          echo APP_IMAGE="${REGISTRY_NAME}/${GITHUB_REPOSITORY,,}"    >> $GITHUB_ENV
-          echo APP_TAG="${GITHUB_SHA:0:8}"                            >> $GITHUB_ENV
-          echo APP_CONFIG="${ENVIRONMENT}_CONFIG"                     >> $GITHUB_ENV    
           echo KUBE_CONFIG="MATRIX_${ENVIRONMENT}_AKS_KUBE_CONFIG"    >> $GITHUB_ENV 
-          echo ENVIRONMENT_LOWER="${ENVIRONMENT,,}"                   >> $GITHUB_ENV
 
       - name: configure app
         id: configure-app
@@ -73,12 +77,16 @@ jobs:
           echo "::set-output name=environment::${{ env.ENVIRONMENT_LOWER }}"
           echo "::set-output name=name::${{ env.APP_NAME }}"
           echo "::set-output name=revision::${{ env.APP_REVISION }}"
-          echo "::set-output name=tag::${{ env.APP_TAG }}"
           echo "::set-output name=image::${{ env.APP_IMAGE }}"
-          echo "::set-output name=registry-name::${{ env.REGISTRY_NAME }}"
-          echo "::set-output name=registry-usr::${{ env.REGISTRY_USR }}"
-          echo "::set-output name=registry-pwd::${{ env.REGISTRY_PWD }}"
-          echo "::set-output name=kube-config::${{ env.KUBE_CONFIG }}"
+          echo "::set-output name=tag::${{ env.APP_TAG }}"
+
+      - name: configure credentials
+        id: configure-creds
+        run: |
+          echo "::set-output name=registry_name::${{ env.REGISTRY_NAME }}"
+          echo "::set-output name=registry_usr::${{ env.REGISTRY_USR }}"
+          echo "::set-output name=registry_pwd::${{ env.REGISTRY_PWD }}"
+          echo "::set-output name=kube_config::${{ env.KUBE_CONFIG }}"
 
       - name: make yaml cfg plain
         id: parse-variables
@@ -94,14 +102,13 @@ jobs:
     needs: [ app-configuration ]
     steps:
       - name: set-vars
-        run: |        
-          echo REGISTRY_NAME=${{ needs.app-configuration.outputs.registry-name }}  >> $GITHUB_ENV
-          echo REGISTRY_USR=${{ needs.app-configuration.outputs.registry-usr }}    >> $GITHUB_ENV
-          echo REGISTRY_PWD=${{ needs.app-configuration.outputs.registry-pwd }}    >> $GITHUB_ENV
+        run: |
+          echo REGISTRY_USR="${{ needs.app-configuration.outputs.registry-usr }}" >> $GITHUB_ENV
+          echo REGISTRY_PWD="${{ needs.app-configuration.outputs.registry-pwd }}" >> $GITHUB_ENV
       - name: docker login
         uses: Azure/docker-login@v1
         with:
-          login-server: ${{ env.REGISTRY_NAME }}
+          login-server: ${{ needs.app-configuration.outputs.registry-name }}
           username: ${{ secrets[env.REGISTRY_USR] }}
           password: ${{ secrets[env.REGISTRY_PWD] }}
       - name: checkout
