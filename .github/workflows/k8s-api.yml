@@ -25,7 +25,7 @@ on:
         default: GIT_TOKEN
 
 jobs:
-  app-configuration:
+  k8s-api:
     runs-on: ubuntu-latest
     outputs:
       environment: ${{ steps.configure-app.outputs.environment }}
@@ -131,8 +131,8 @@ jobs:
             --wait \
             --timeout 6m0s \
             --namespace '${{ inputs.namespace }}' \
-            --values    '${{ inputs.values }}' \
-            --set       environment='${{ steps.configure-app.outputs.environment }}' \
-            --set       image='${{ steps.configure-app.outputs.image }}:${{ steps.configure-app.outputs.tag }}' \
-            --set       repository='${{ github.repository }}' \
-            --set       config='${{ steps.configure-app.outputs.config_b64 }}'
+            --values '${{ inputs.values }}' \
+            --set environment='${{ steps.configure-app.outputs.environment }}' \
+            --set image='${{ steps.configure-app.outputs.image }}:${{ steps.configure-app.outputs.tag }}' \
+            --set repository='${{ github.repository }}' \
+            --set config='${{ steps.configure-app.outputs.config_b64 }}'
