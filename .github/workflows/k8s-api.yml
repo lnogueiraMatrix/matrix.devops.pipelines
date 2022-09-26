@@ -85,13 +85,11 @@ jobs:
           echo "::set-output name=kube_config::${{ env.KUBE_CONFIG }}"
 
       - name: make yaml cfg plain
-        id: parse-variables
+        id: parseVars
         uses: mikefarah/yq@master
         with: 
           cmd: |
-            echo ${{ secrets[env.APP_CONFIG] }} > .cfgComplex
-            cat .cfgComplex | base64 -d | yq e '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' - | base64 -w0 > .cfgFlat
-            echo "::set-output name=config_b64::$(cat .cfgFlat)"
+            echo ${{ secrets[env.APP_CONFIG] }} | base64 -d | yq e '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' - | base64 -w0
       - name: docker login
         uses: Azure/docker-login@v1
         with:
@@ -135,4 +133,4 @@ jobs:
             --set environment='${{ steps.configure-app.outputs.environment }}' \
             --set image='${{ steps.configure-app.outputs.image }}:${{ steps.configure-app.outputs.tag }}' \
             --set repository='${{ github.repository }}' \
-            --set config='${{ steps.parse-variables.outputs.config_b64 }}'
+            --set config='${{ steps.parseVars.outputs.config_b64 }}'
