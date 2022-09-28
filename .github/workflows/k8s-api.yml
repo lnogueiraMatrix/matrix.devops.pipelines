@@ -89,8 +89,8 @@ jobs:
       - name: make yaml cfg plain
         id: parseVars
         run: |
-          wget https://github.com/mikefarah/yq/releases/download/${{ env.YQ_VERSION }}/${{ env.YQ_BINARY }} -O /usr/bin/yq
-          sudo chmod +x /usr/bin/yq          
+          wget https://github.com/mikefarah/yq/releases/download/${{ env.YQ_VERSION }}/${{ env.YQ_BINARY }} -O yq
+          chmod +x yq          
           echo '${{ secrets[env.APP_CONFIG] }}' | base64 -d > .content
           S_ENCODING=$(file -b --mime-encoding .content)
           D_ENCODING='UTF-8//TRANSLIT'
