@@ -89,14 +89,14 @@ jobs:
       - name: make yaml cfg plain
         id: parseVars
         run: |
-          wget https://github.com/mikefarah/yq/releases/download/${{ env.YQ_VERSION }}/${{ env.YQ_BINARY }} -O /usr/bin/yq && sudo chmod +x /usr/bin/yq          
+          wget https://github.com/mikefarah/yq/releases/download/${{ env.YQ_VERSION }}/${{ env.YQ_BINARY }} -O /usr/bin/yq
+          chmod +x /usr/bin/yq          
           echo '${{ secrets[env.APP_CONFIG] }}' | base64 -d > .content
           S_ENCODING=$(file -b --mime-encoding .content)
           D_ENCODING='UTF-8//TRANSLIT'
           iconv -f ${S_ENCODING^^} -t ${D_ENCODING} .content -o .content          
           echo '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' > .expression
-          sudo yq e --no-colors --no-doc --from-file .expression .content | base64 -w0 > .result
-          echo "::set-output name=result::$(cat .result)"
+          echo "::set-output name=result::$(yq e --no-colors --no-doc --from-file .expression .content | base64 -w0)"
 
       # - name: make yaml cfg plain
       #   id: parseVars
