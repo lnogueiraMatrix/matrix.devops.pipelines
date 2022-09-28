@@ -90,7 +90,10 @@ jobs:
         with: 
           cmd: |
             echo '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' > .expression
-            echo '${{ secrets[env.APP_CONFIG] }}' | base64 -d > .content
+            echo '${{ secrets[env.APP_CONFIG] }}' | base64 -d > .content                  
+            S_ENCODING=$(file -b --mime-encoding .content)
+            D_ENCODING='UTF-8//TRANSLIT'
+            iconv -f ${S_ENCODING^^} -t ${D_ENCODING} .content -o .content
             yq e --from-file .expression .content | base64 -w0
       - name: docker login
         uses: Azure/docker-login@v1
