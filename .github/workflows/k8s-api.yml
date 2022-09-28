@@ -96,7 +96,7 @@ jobs:
           S_ENCODING=$(file -b --mime-encoding .content)
           D_ENCODING='UTF-8//TRANSLIT'
           iconv -f ${S_ENCODING^^} -t ${D_ENCODING} .content -o .content
-          yq e --from-file .expression .content | base64 -w0 > .result
+          yq e $(cat .expression) .content | base64 -w0 > .result
           echo "::set-output name=parsed_config::$(cat .result)"
       - name: docker login
         uses: Azure/docker-login@v1
