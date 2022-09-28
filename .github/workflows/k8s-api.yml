@@ -86,15 +86,18 @@ jobs:
 
       - name: make yaml cfg plain
         id: parseVars
-        uses: mikefarah/yq@master
-        with: 
-          cmd: |
-            echo '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' > .expression
-            echo '${{ secrets[env.APP_CONFIG] }}' | base64 -d > .content                  
-            S_ENCODING=$(file -b --mime-encoding .content)
-            D_ENCODING='UTF-8//TRANSLIT'
-            iconv -f ${S_ENCODING^^} -t ${D_ENCODING} .content -o .content
-            yq e --from-file .expression .content | base64 -w0
+        run: |
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys CC86BB64
+          sudo add-apt-repository ppa:rmescandon/yq
+          sudo apt update
+          sudo apt install yq -y
+          echo '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' > .expression
+          echo '${{ secrets[env.APP_CONFIG] }}' | base64 -d > .content                  
+          S_ENCODING=$(file -b --mime-encoding .content)
+          D_ENCODING='UTF-8//TRANSLIT'
+          iconv -f ${S_ENCODING^^} -t ${D_ENCODING} .content -o .content
+          yq e --from-file .expression .content | base64 -w0 > .result
+          echo "::set-output name=parsed_config::$(cat .result)"
       - name: docker login
         uses: Azure/docker-login@v1
         with:
@@ -137,4 +140,4 @@ jobs:
             --set environment='${{ steps.configure-app.outputs.environment }}' \
             --set image='${{ steps.configure-app.outputs.image }}:${{ steps.configure-app.outputs.tag }}' \
             --set repository='${{ github.repository }}' \
-            --set config='${{ steps.parseVars.outputs.result }}'
+            --set config='${{ steps.parseVars.outputs.parsed_config }}'
