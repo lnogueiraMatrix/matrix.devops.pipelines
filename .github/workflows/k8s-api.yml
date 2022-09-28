@@ -89,7 +89,7 @@ jobs:
         uses: mikefarah/yq@master
         with: 
           cmd: |
-            echo ${{ secrets[env.APP_CONFIG] }} | base64 -d | yq e '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' - | base64 -w0
+            echo '${{ secrets[env.APP_CONFIG] }}' | base64 -d | yq e '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' - | base64 -w0
       - name: docker login
         uses: Azure/docker-login@v1
         with:
