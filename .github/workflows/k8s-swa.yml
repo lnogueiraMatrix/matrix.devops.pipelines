@@ -138,7 +138,9 @@ jobs:
         run: ${{ inputs.build-command }}
 
       - name: Docker build
-        run: |          
+        run: |
+          ls -la
+          cat .env
           docker build \
             --build-arg DESTINATION=${{ inputs.output-dir }} \
             -t ${IMAGE}:${TAG} \
