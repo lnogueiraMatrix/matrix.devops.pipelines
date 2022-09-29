@@ -1,4 +1,5 @@
 name: build and deploy to k8s
+# SWA Uses a .env instead of .yaml encoded file
 
 env:
   HELM_VERSION: v3.9.2
@@ -132,15 +133,13 @@ jobs:
       - name: Create .env
         run: |
           rm -rf .env
-          echo ${{ secrets[env.CONFIG] }} > .env
+          echo ${{ secrets[env.CONFIG] }} | base64 -d > .env
 
       - name: Build application
         run: ${{ inputs.build-command }}
 
       - name: Docker build
         run: |
-          ls -la
-          cat .env
           docker build \
             --build-arg DESTINATION=${{ inputs.output-dir }} \
             -t ${IMAGE}:${TAG} \
