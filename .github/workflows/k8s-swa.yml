@@ -134,6 +134,7 @@ jobs:
         run: |
           rm -rf .env
           echo ${{ secrets[env.CONFIG] }} | base64 -d > .env
+          cat .env
 
       - name: Build application
         run: ${{ inputs.build-command }}
