@@ -141,6 +141,8 @@ jobs:
 
       - name: Docker build
         run: |
+          OUT_FILES=$(ls -a ${{ inputs.output-dir }} | tr '\n' '\n')
+          echo "Files to Copy = ${OUT_FILES}"
           docker build \
             --build-arg DESTINATION=${{ inputs.output-dir }} \
             -t ${IMAGE}:${TAG} \
