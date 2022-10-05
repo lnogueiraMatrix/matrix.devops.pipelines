@@ -131,7 +131,6 @@ jobs:
       - name: docker build
         run: |
           docker build \
-            --build-arg DESTINATION=${{ env.OUT_DIR }} \
             --build-arg ${{ inputs.tokenName }}=${{ secrets.PACKAGES_TOKEN }} \
             -t "${{ env.APP_IMAGE }}:${{ env.APP_TAG }}" \
             -t "${{ env.APP_IMAGE }}:latest" \
