@@ -1,2 +1,3 @@
-.dockerignore
-[d|D]ockerfile
+*
+!TMP_OUT
+!nginx.conf
