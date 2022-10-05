@@ -128,6 +128,8 @@ jobs:
           ${{ inputs.build-command }}
           rm -rf ${{ env.OUT_DIR }}} && mkdir ${{ env.OUT_DIR }}
           mv ${{ inputs.output-dir }} ${{ env.OUT_DIR }}
+          echo "Output Files: "
+          ls -lah ${{ env.OUT_DIR }}
       - name: docker build
         run: |
           docker build \
