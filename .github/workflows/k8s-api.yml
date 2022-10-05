@@ -1,10 +1,10 @@
-name: k8s Api v7
+name: k8s Api v8
 env:
   CLONE_TOKEN: GIT_TOKEN_CUSTOM
   PUBLISH_TOKEN: PACKAGES_TOKEN
   HELM_VERSION: v3.9.2
   CHART_REPOSITORY: 'Matrix-Energia/matrix.devops.template.charts.git'
-  CHART_REVISION: v7
+  CHART_REVISION: v8
   CHART_PATH: charts
   CHART_TYPE: api
   YQ_VERSION: v4.2.0
