@@ -9,7 +9,6 @@ env:
   CHART_TYPE: api
   YQ_VERSION: v4.2.0
   YQ_BINARY: yq_linux_amd64
-
 on:
   workflow_call:
     inputs:
@@ -25,7 +24,6 @@ on:
         type: string
         required: false
         default: GIT_TOKEN
-
 jobs:
   k8s-api:
     runs-on: ubuntu-latest
@@ -43,23 +41,22 @@ jobs:
         with:
           submodules: recursive
           token: ${{ secrets[env.CLONE_TOKEN] }}
-      - name: prd
-        if: github.ref_name == 'main'
-        run: |
-          echo "ENVIRONMENT=PRD"                    >> $GITHUB_ENV
-          echo "APP_REVISION=prd"                   >> $GITHUB_ENV
-      - name: hml
-        if: github.ref_name == 'hml'
-        run: |
-          echo "ENVIRONMENT=HML"                    >> $GITHUB_ENV
-          echo "APP_REVISION=hml"                   >> $GITHUB_ENV
-      - name: not prd or hml
+      - name: dev
         if: ( github.ref_name != 'main' && github.ref_name != 'hml' )
         run: |
           REV_NAME=${GITHUB_REF_NAME,,}
           echo "ENVIRONMENT=DEV"                    >> $GITHUB_ENV                  
           echo "APP_REVISION=${REV_NAME//\//-}"     >> $GITHUB_ENV
-
+      - name: hml
+        if: github.ref_name == 'hml'
+        run: |
+          echo "ENVIRONMENT=HML"                    >> $GITHUB_ENV
+          echo "APP_REVISION=hml"                   >> $GITHUB_ENV
+      - name: prd
+        if: github.ref_name == 'main'
+        run: |
+          echo "ENVIRONMENT=PRD"                    >> $GITHUB_ENV
+          echo "APP_REVISION=prd"                   >> $GITHUB_ENV
       - name: set-vars
         run: |
           APP_NAME="${GITHUB_REPOSITORY/'Matrix-Energia/'/}"
@@ -75,7 +72,7 @@ jobs:
           echo APP_CONFIG="${ENVIRONMENT}_CONFIG"                     >> $GITHUB_ENV
           echo APP_IMAGE="${REGISTRY_NAME}/${GITHUB_REPOSITORY,,}"    >> $GITHUB_ENV
           echo APP_TAG="${GITHUB_SHA:0:8}"                            >> $GITHUB_ENV
-          echo KUBE_CONFIG="MATRIX_${ENVIRONMENT}_AKS_KUBE_CONFIG"    >> $GITHUB_ENV 
+          echo KUBE_CONFIG="MATRIX_${ENVIRONMENT}_AKS_KUBE_CONFIG"    >> $GITHUB_ENV
       - name: configure app
         id: configure-app
         run: |
@@ -85,7 +82,6 @@ jobs:
           echo "::set-output name=image::${{ env.APP_IMAGE }}"
           echo "::set-output name=tag::${{ env.APP_TAG }}"
           echo "::set-output name=kube_config::${{ env.KUBE_CONFIG }}"
-
       - name: make yaml cfg plain
         id: parseVars
         run: |
@@ -98,7 +94,6 @@ jobs:
           echo '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' > .expression
           yq e --no-colors --no-doc --from-file .expression .content > .result
           echo "::set-output name=result::$( cat .result | base64 -w0 )"
-
       - name: docker login
         uses: Azure/docker-login@v1
         with:

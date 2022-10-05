@@ -1,16 +1,14 @@
-name: build and deploy to k8s
+name: k8s SWA v7
 # SWA Uses a .env instead of .yaml encoded file
-
 env:
   HELM_VERSION: v3.9.2
-  CHART_REVISION: v6
+  CHART_REVISION: v7
   CHART_PATH: _CHARTS_
   CHART_TYPE: webpage
-  PIPELINE_REVISION: v6
+  PIPELINE_REVISION: v7
   PIPELINE_PATH: _PIPELINE_
   DOCKERFILE_PATH: Dockerfiles/swa
   OUT_DIR: TMP_OUT
-
 on:
   workflow_call:
     inputs:
@@ -34,55 +32,51 @@ on:
         type: string
         required: false
         default: dist
-
+      tokenName:
+        type: string
+        required: false
+        default: GIT_TOKEN
 jobs:
-  build-and-deploy:
+  swa:
     runs-on: ubuntu-latest
     steps:
-
 # Configuration Setup
-      - name: Clone repository
+      - name: clone repository
         uses: actions/checkout@v3
         with:
           submodules: recursive
           token: ${{ secrets.GIT_TOKEN_CUSTOM }}
-
-      - name: prd
-        if: github.ref_name == 'main'
+      - name: dev
+        if: ( github.ref_name != 'main' && github.ref_name != 'hml' )
         run: |
-          echo "ENVIRONMENT=PRD" >> $GITHUB_ENV
-          echo "ENVIRONMENT_LOWER=prd" >> $GITHUB_ENV
-          echo "APP_REVISION=prd" >> $GITHUB_ENV
-
+          echo "ENVIRONMENT=DEV" >> $GITHUB_ENV
+          echo "APP_REVISION=${GITHUB_REF_NAME//\//-}" >> $GITHUB_ENV
       - name: hml
         if: github.ref_name == 'hml'
         run: |
           echo "ENVIRONMENT=HML" >> $GITHUB_ENV
-          echo "ENVIRONMENT_LOWER=hml" >> $GITHUB_ENV
           echo "APP_REVISION=hml" >> $GITHUB_ENV
-
-      - name: not prd or hml
-        if: ( github.ref_name != 'main' && github.ref_name != 'hml' )
+      - name: prd
+        if: github.ref_name == 'main'
         run: |
-          echo "ENVIRONMENT=DEV" >> $GITHUB_ENV
-          echo "ENVIRONMENT_LOWER=dev" >> $GITHUB_ENV
-          echo "APP_REVISION=${GITHUB_REF_NAME//\//-}" >> $GITHUB_ENV
-
-      - name: Configure variables
+          echo "ENVIRONMENT=PRD" >> $GITHUB_ENV
+          echo "APP_REVISION=prd" >> $GITHUB_ENV
+      - name: configure variables
         run: |
-          REGISTRY_NAME=${ENVIRONMENT_LOWER}akscr.azurecr.io
           APP_NAME=${GITHUB_REPOSITORY/'Matrix-Energia/'/}
           APP_NAME=${APP_NAME/matrix./}
           APP_NAME=${APP_NAME//./-}
-          echo "APP_NAME=${APP_NAME}"                               >> $GITHUB_ENV
-          echo "KUBE_CONFIG=MATRIX_${ENVIRONMENT}_AKS_KUBE_CONFIG"  >> $GITHUB_ENV
+          ENVIRONMENT_LOWER="${ENVIRONMENT,,}"
+          REGISTRY_NAME=${ENVIRONMENT_LOWER}akscr.azurecr.io
           echo "REGISTRY_NAME=${REGISTRY_NAME}"                     >> $GITHUB_ENV
-          echo "REGISTRY_PWD=MATRIX_${ENVIRONMENT}_ACR_PASSWORD"    >> $GITHUB_ENV
           echo "REGISTRY_USR=MATRIX_${ENVIRONMENT}_ACR_USERNAME"    >> $GITHUB_ENV
-          echo "IMAGE=${REGISTRY_NAME}/${GITHUB_REPOSITORY,,}"      >> $GITHUB_ENV
-          echo "TAG=${GITHUB_SHA}"                                  >> $GITHUB_ENV
-          echo "CONFIG=${ENVIRONMENT}_CONFIG"                       >> $GITHUB_ENV
-
+          echo "REGISTRY_PWD=MATRIX_${ENVIRONMENT}_ACR_PASSWORD"    >> $GITHUB_ENV
+          echo "ENVIRONMENT_LOWER=${ENVIRONMENT_LOWER}"             >> $GITHUB_ENV
+          echo "APP_NAME=${APP_NAME}"                               >> $GITHUB_ENV
+          echo "APP_CONFIG=${ENVIRONMENT}_CONFIG"                   >> $GITHUB_ENV
+          echo "APP_IMAGE=${REGISTRY_NAME}/${GITHUB_REPOSITORY,,}"  >> $GITHUB_ENV
+          echo APP_TAG="${GITHUB_SHA:0:8}"                          >> $GITHUB_ENV
+          echo "KUBE_CONFIG=MATRIX_${ENVIRONMENT}_AKS_KUBE_CONFIG"  >> $GITHUB_ENV
 # Docker setup
       - name: clone dockerfile
         uses: actions/checkout@v3
@@ -90,14 +84,11 @@ jobs:
           repository: 'Matrix-Energia/matrix.devops.pipelines.git'
           ref: ${{ env.PIPELINE_REVISION }}
           path: ${{ env.PIPELINE_PATH }}
-          token: ${{ secrets.GIT_TOKEN_CUSTOM }}
-      
+          token: ${{ secrets.GIT_TOKEN_CUSTOM }}      
       - name: copy dockerfile
         run: mv -f ${{ env.PIPELINE_PATH }}/${{ env.DOCKERFILE_PATH }}/* ./
-
       - name: Check files
         run: ls -la && ls -la ${{ env.PIPELINE_PATH }}
-
 # Docker registry setup
       - name: docker login 
         uses: Azure/docker-login@v1
@@ -110,7 +101,6 @@ jobs:
         uses: azure/setup-helm@v3
         with:
           version: ${{ env.HELM_VERSION }}
-
       - name: clone helms
         uses: actions/checkout@v3
         with:
@@ -118,43 +108,37 @@ jobs:
           ref: ${{ env.CHART_REVISION }}
           path: ${{ env.CHART_PATH }}
           token: ${{ secrets.GIT_TOKEN_CUSTOM }}
-
 # k8s Cluster Setup
       - name: connect to cluster
         uses: Azure/k8s-set-context@v2
         with:
           kubeconfig: ${{ secrets[env.KUBE_CONFIG] }}
-
 # Build Application and Container        
-      - name: Install nodejs ${{ inputs.node-version }}
+      - name: install nodejs ${{ inputs.node-version }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ inputs.node-version }}
-
-      - name: Create .env
+      - name: create .env
         run: |
           rm -rf .env
-          echo ${{ secrets[env.CONFIG] }} | base64 -d > .env
+          echo ${{ secrets[env.APP_CONFIG] }} | base64 -d > .env
           cat .env
-
-      - name: Build application
+      - name: build application
         run: |
           ${{ inputs.build-command }}
           rm -rf ${{ env.OUT_DIR }}} && mkdir ${{ env.OUT_DIR }}
           mv ${{ inputs.output-dir }} ${{ env.OUT_DIR }}
-
-      - name: Docker build
+      - name: docker build
         run: |
           docker build \
             --build-arg DESTINATION=${{ env.OUT_DIR }} \
-            -t ${IMAGE}:${TAG} \
-            -t ${IMAGE}:latest \
+            --build-arg ${{ inputs.tokenName }}=${{ secrets.PACKAGES_TOKEN }} \
+            -t "${{ env.APP_IMAGE }}:${{ env.APP_TAG }}" \
+            -t "${{ env.APP_IMAGE }}:latest" \
             .
-
 # Docker Push
       - name: docker push
-        run: docker push --all-tags ${IMAGE}
-
+        run: docker push --all-tags ${{ env.APP_IMAGE }}
 # Install to Cluster
       - name: install helm chart
         run: |
