@@ -1,6 +1,6 @@
 FROM nginx:stable-alpine
-COPY nginx.conf /etc/nginx
+ADD nginx.conf /etc/nginx
 WORKDIR /usr/share/nginx/html
 RUN rm -rf ./*
-COPY TMP_OUT/  ./
+ADD TMP_OUT  ./
 CMD [ "nginx", "-g", "daemon off;" ]
