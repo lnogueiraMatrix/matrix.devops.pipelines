@@ -123,6 +123,12 @@ jobs:
           rm -rf .env
           echo ${{ secrets[env.APP_CONFIG] }} | base64 -d > .env
           cat .env
+      - name: create .npmrc
+        run: |
+          rm -rf .npmrc
+          echo "@matrix-energia:registry=https://npm.pkg.github.com" > .npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.PACKAGES_TOKEN }}" >> .npmrc
+          cat .npmrc
       - name: build application
         run: |
           ${{ inputs.build-command }}
