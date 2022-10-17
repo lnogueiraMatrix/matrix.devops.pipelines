@@ -86,14 +86,23 @@ jobs:
         id: parseVars
         run: |
           wget -nv -q https://github.com/mikefarah/yq/releases/download/${{ env.YQ_VERSION }}/${{ env.YQ_BINARY }} -O yq
-          chmod +x yq          
-          echo '${{ secrets[env.APP_CONFIG] }}' | base64 -d > .content
-          S_ENCODING=$(file -b --mime-encoding .content)
-          D_ENCODING='UTF-8//TRANSLIT'
-          iconv -f ${S_ENCODING^^} -t ${D_ENCODING} .content -o .content          
-          echo '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' > .expression
-          yq e --no-colors --no-doc --from-file .expression .content > .result
-          echo "::set-output name=result::$( cat .result | base64 -w0 )"
+          chmod +x yq
+          SECRET_CONFIG='${{ secrets[env.APP_CONFIG] }}'
+          B64_CONFIG=''
+          if [[ -z "${SECRET_CONFIG}" ]]
+          then
+              echo "Seems your ${ENVIRONMENT}_CONFIG is not set or is empty"
+              B64_CONFIG=$( echo "NOCONFIG: true" | base64 -w0 )
+          else
+              echo "${SECRET_CONFIG}" > .content
+              S_ENCODING=$(file -b --mime-encoding .content)
+              D_ENCODING='UTF-8//TRANSLIT'
+              iconv -f ${S_ENCODING^^} -t ${D_ENCODING} .content -o .content
+              echo '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' > .expression
+              yq e --no-colors --no-doc --from-file .expression .content > .result
+              B64_CONFIG=$( cat .result | base64 -w0 )
+          fi
+          echo "::set-output name=result::${B64_CONFIG}"
       - name: docker login
         uses: Azure/docker-login@v1
         with:
