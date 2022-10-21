@@ -76,12 +76,12 @@ jobs:
       - name: configure app
         id: configure-app
         run: |
-          echo "::set-output name=environment::${{ env.ENVIRONMENT_LOWER }}"
-          echo "::set-output name=name::${{ env.APP_NAME }}"
-          echo "::set-output name=revision::${{ env.APP_REVISION }}"
-          echo "::set-output name=image::${{ env.APP_IMAGE }}"
-          echo "::set-output name=tag::${{ env.APP_TAG }}"
-          echo "::set-output name=kube_config::${{ env.KUBE_CONFIG }}"
+          echo "environment=${{ env.ENVIRONMENT_LOWER }}" >> $GITHUB_STATE
+          echo "name=${{ env.APP_NAME }}"                 >> $GITHUB_STATE
+          echo "revision=${{ env.APP_REVISION }}"         >> $GITHUB_STATE
+          echo "image=${{ env.APP_IMAGE }}"               >> $GITHUB_STATE
+          echo "tag=${{ env.APP_TAG }}"                   >> $GITHUB_STATE
+          echo "kube_config=${{ env.KUBE_CONFIG }}"       >> $GITHUB_STATE
       - name: make yaml cfg plain
         id: parseVars
         run: |
@@ -91,7 +91,8 @@ jobs:
           if [[ -z "${SECRET_CONFIG}" ]]
           then
             echo "Seems your ${ENVIRONMENT}_CONFIG is not set or is empty"
-            echo "::set-output name=result::$( echo "NOCONFIG: true" | base64 -w0 )"
+            RESULT="$( echo "NOCONFIG: true" | base64 -w0 )"
+            echo "result=${RESULT}" >> $GITHUB_STATE
           else
             echo '${{ secrets[env.APP_CONFIG] }}' | base64 -d > .content
             S_ENCODING=$(file -b --mime-encoding .content)
@@ -99,7 +100,8 @@ jobs:
             iconv -f ${S_ENCODING^^} -t ${D_ENCODING} .content -o .content
             echo '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' > .expression
             yq e --no-colors --no-doc --from-file .expression .content > .result
-            echo "::set-output name=result::$( cat .result | base64 -w0 )"
+            RESULT="$( cat .result | base64 -w0 )"
+            echo "result=${RESULT}" >> $GITHUB_STATE
           fi
       - name: docker login
         uses: Azure/docker-login@v1
