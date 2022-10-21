@@ -76,12 +76,12 @@ jobs:
       - name: configure app
         id: configure-app
         run: |
-          echo "environment=${{ env.ENVIRONMENT_LOWER }}" >> $GITHUB_STATE
-          echo "name=${{ env.APP_NAME }}"                 >> $GITHUB_STATE
-          echo "revision=${{ env.APP_REVISION }}"         >> $GITHUB_STATE
-          echo "image=${{ env.APP_IMAGE }}"               >> $GITHUB_STATE
-          echo "tag=${{ env.APP_TAG }}"                   >> $GITHUB_STATE
-          echo "kube_config=${{ env.KUBE_CONFIG }}"       >> $GITHUB_STATE
+          echo "environment=${{ env.ENVIRONMENT_LOWER }}" >> $GITHUB_OUTPUT
+          echo "name=${{ env.APP_NAME }}"                 >> $GITHUB_OUTPUT
+          echo "revision=${{ env.APP_REVISION }}"         >> $GITHUB_OUTPUT
+          echo "image=${{ env.APP_IMAGE }}"               >> $GITHUB_OUTPUT
+          echo "tag=${{ env.APP_TAG }}"                   >> $GITHUB_OUTPUT
+          echo "kube_config=${{ env.KUBE_CONFIG }}"       >> $GITHUB_OUTPUT
       - name: make yaml cfg plain
         id: parseVars
         run: |
