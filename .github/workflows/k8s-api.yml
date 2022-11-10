@@ -37,7 +37,7 @@ jobs:
       config_b64: ${{ steps.parseVars.outputs.result }}
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@a81bbbf8298c0fa03ea29cdc473d45769f953675
         with:
           submodules: recursive
           token: ${{ secrets[env.CLONE_TOKEN] }}
