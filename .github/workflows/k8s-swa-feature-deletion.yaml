@@ -1,0 +1,64 @@
+name: k8s feature chart delete v1
+env: 
+  CLONE_TOKEN: GIT_TOKEN_CUSTOM
+  PUBLISH_TOKEN: PACKAGES_TOKEN
+  HELM_VERSION: v3.9.2
+  CHART_REPOSITORY: 'Matrix-Energia/matrix.devops.template.charts.git'
+  CHART_REVISION: v8
+  CHART_PATH: charts
+  CHART_TYPE: deletion
+on: 
+  workflow_call: 
+    inputs: 
+      namespace:
+        type: string
+        required: false
+        default: matrix-webapges
+jobs:
+  k8s-api:
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{steps.configure-app.outputs.environment}}
+      name: ${{steps.configure-app.outputs.name}}
+      revision: ${{steps.configure-app.outputs.revision}}
+      tag: ${{steps.configure-app.outputs.tag}}
+      kube_config: ${{steps.configure-app.outputs.kube_config}}
+      config_b64: ${{steps.parseVars.outputs.result}}
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ secrets[env.CLONE_TOKEN] }}
+      - name: dev
+        if: ( github.ref_name != 'main' && github.ref_name != 'hml' )
+        run: |
+          REV_NAME=${GITHUB_REF_NAME,,}
+          echo "ENVIRONMENT=DEV"                    >> $GITHUB_ENV                  
+          echo "APP_REVISION=${REV_NAME//\//-}"     >> $GITHUB_ENV
+      - name: set-vars
+        run: |
+          APP_NAME="${GITHUB_REPOSITORY/'Matrix-Energia/'/}"
+          APP_NAME="${APP_NAME/matrix./}"
+          APP_NAME="${APP_NAME//./-}"
+          ENVIRONMENT_LOWER="${ENVIRONMENT,,}"
+          REGISTRY_NAME="${ENVIRONMENT_LOWER}akscr.azurecr.io"
+          echo REGISTRY_NAME="${REGISTRY_NAME}"                       >> $GITHUB_ENV
+          echo REGISTRY_USR="MATRIX_${ENVIRONMENT}_ACR_USERNAME"      >> $GITHUB_ENV 
+          echo REGISTRY_PWD="MATRIX_${ENVIRONMENT}_ACR_PASSWORD"      >> $GITHUB_ENV 
+          echo ENVIRONMENT_LOWER="${ENVIRONMENT_LOWER}"               >> $GITHUB_ENV
+          echo APP_NAME="${APP_NAME}"                                 >> $GITHUB_ENV
+          echo APP_CONFIG="${ENVIRONMENT}_CONFIG"                     >> $GITHUB_ENV
+          echo APP_TAG="${GITHUB_SHA:0:8}-${GITHUB_RUN_NUMBER}"       >> $GITHUB_ENV
+          echo KUBE_CONFIG="MATRIX_${ENVIRONMENT}_AKS_KUBE_CONFIG"    >> $GITHUB_ENV
+      - name: clone helms
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ env.CHART_REPOSITORY }}
+          ref: ${{ env.CHART_REVISION }}
+          path: ${{ env.CHART_PATH }}
+          token: ${{ secrets[env.CLONE_TOKEN] }}
+      - name: install app
+        run: |
+          helm uninstall ${{ steps.configure-app.outputs.name }} \
+                     
