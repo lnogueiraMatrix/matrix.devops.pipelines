@@ -80,8 +80,8 @@ jobs:
           APP_NAME="${APP_NAME//./-}"
           APP_CONFIG="${ENVIRONMENT}_CONFIG"
           KEYVAULT="aks-matrix-${ENVIRONMENT_LOWER}"
-          AZ_USER="${secrets.{AKS_KV_USR}}"
-          AZ_PWD="{secrets.{AKS_KV_PWD}}"
+          AZ_USER="${{ secrets.AKS_KV_USR }}"
+          AZ_PWD="{{ secrets.AKS_KV_PWD }}"
           az login --service-principal -u $AZ_USER -p $AZ_PWD --tenant ea6cc59e-3b32-4e43-a21a-5598f02cb560
           az keyvault secret set --vault-name "${KEYVAULT}" --name "$APP_NAME" --value "${APP_CONFIG}"
       - name: configure app
