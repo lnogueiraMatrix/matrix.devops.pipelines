@@ -75,11 +75,13 @@ jobs:
           echo KUBE_CONFIG="MATRIX_${ENVIRONMENT}_AKS_KUBE_CONFIG"    >> $GITHUB_ENV
       - name: export keyvault
         run: |
+          APP_NAME="${GITHUB_REPOSITORY/'Matrix-Energia/'/}"
+          APP_NAME="${APP_NAME/matrix./}"
+          APP_NAME="${APP_NAME//./-}"
           KEYVAULT="aks-matrix-${ENVIRONMENT_LOWER}"
-          KVENV="${ENVIRONMENT_LOWER}"
-          KVAPP="${GITHUB_REPOSITORY}"
+          GITREPO="${GITHUB_REPOSITORY}"
           KVAPPCONFIG="${APP_CONFIG}"
-          az keyvault secret set --vault-name "${KEYVAULT}" --name "${KVAPP}" --value "${{ secrets[env.KVAPPCONFIG] }}"
+          az keyvault secret set --vault-name "${KEYVAULT}" --name "$APP_NAME" --value "${{ secrets[env.KVAPPCONFIG] }}"
       - name: configure app
         id: configure-app
         run: |
