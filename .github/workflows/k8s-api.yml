@@ -80,7 +80,7 @@ jobs:
           APP_NAME="${APP_NAME//./-}"
           APP_CONFIG="${ENVIRONMENT}_CONFIG"
           KEYVAULT="aks-matrix-${ENVIRONMENT_LOWER}"
-          az keyvault secret set --vault-name "${KEYVAULT}" --name "$APP_NAME" --value "${{ secrets[env.APP_CONFIG] }}"
+          az keyvault secret set --vault-name "${KEYVAULT}" --name "$APP_NAME" --value "${APP_CONFIG}"
       - name: configure app
         id: configure-app
         run: |
