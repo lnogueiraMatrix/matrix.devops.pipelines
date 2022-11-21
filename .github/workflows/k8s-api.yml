@@ -73,6 +73,9 @@ jobs:
           echo APP_IMAGE="${REGISTRY_NAME}/${GITHUB_REPOSITORY,,}"    >> $GITHUB_ENV
           echo APP_TAG="${GITHUB_SHA:0:8}-${GITHUB_RUN_NUMBER}"       >> $GITHUB_ENV
           echo KUBE_CONFIG="MATRIX_${ENVIRONMENT}_AKS_KUBE_CONFIG"    >> $GITHUB_ENV
+      - name: export keyvault
+        run: |
+          az keyvault secret set --vault-name "aks-matrix-${ENVIRONMENT_LOWER}" --name "${GITHUB_REPOSITORY}" --value "${{ secrets[env.APP_CONFIG] }}"
       - name: configure app
         id: configure-app
         run: |
