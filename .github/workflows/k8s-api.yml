@@ -75,6 +75,7 @@ jobs:
           echo KUBE_CONFIG="MATRIX_${ENVIRONMENT}_AKS_KUBE_CONFIG"    >> $GITHUB_ENV
       - name: export keyvault
         run: |
+          echo $GIT_SA
           APP_NAME="${GITHUB_REPOSITORY/'Matrix-Energia/'/}"
           APP_NAME="${APP_NAME/matrix./}"
           APP_NAME="${APP_NAME//./-}"
