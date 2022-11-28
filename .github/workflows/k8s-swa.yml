@@ -132,6 +132,15 @@ jobs:
           rm -rf .env
           echo ${{ secrets[env.APP_CONFIG] }} | base64 -d > .env
           cat .env
+      - name: configure app
+        id: configure-app
+        run: |
+          echo "environment=${{ env.ENVIRONMENT_LOWER }}" >> $GITHUB_OUTPUT
+          echo "name=${{ env.APP_NAME }}"                 >> $GITHUB_OUTPUT
+          echo "revision=${{ env.APP_REVISION }}"         >> $GITHUB_OUTPUT
+          echo "image=${{ env.APP_IMAGE }}"               >> $GITHUB_OUTPUT
+          echo "tag=${{ env.APP_TAG }}"                   >> $GITHUB_OUTPUT
+          echo "kube_config=${{ env.KUBE_CONFIG }}"       >> $GITHUB_OUTPUT
       - name: make yaml cfg plain
         id: parseVars
         run: |
@@ -150,9 +159,9 @@ jobs:
             iconv -f ${S_ENCODING^^} -t ${D_ENCODING} .content -o .content
             echo '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' > .expression
             yq e --no-colors --no-doc --from-file .expression .content > .result
-            RESULT="$( cat .result | base64 -w0 )"
-            echo "result=${RESULT}" >> $GITHUB_OUTPUT
-          fi
+              RESULT="$( cat .result | base64 -w0 )"
+              echo "result=${RESULT}" >> $GITHUB_OUTPUT
+            fi
       - name: create .npmrc
         run: |
           rm -rf .npmrc
