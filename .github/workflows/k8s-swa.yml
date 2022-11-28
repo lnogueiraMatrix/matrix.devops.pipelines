@@ -118,22 +118,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ inputs.node-version }}
-      - name: set-vars
-        run: |
-          APP_NAME="${GITHUB_REPOSITORY/'Matrix-Energia/'/}"
-          APP_NAME="${APP_NAME/matrix./}"
-          APP_NAME="${APP_NAME//./-}"
-          ENVIRONMENT_LOWER="${ENVIRONMENT,,}"
-          REGISTRY_NAME="${ENVIRONMENT_LOWER}akscr.azurecr.io"
-          echo REGISTRY_NAME="${REGISTRY_NAME}"                       >> $GITHUB_ENV
-          echo REGISTRY_USR="MATRIX_${ENVIRONMENT}_ACR_USERNAME"      >> $GITHUB_ENV 
-          echo REGISTRY_PWD="MATRIX_${ENVIRONMENT}_ACR_PASSWORD"      >> $GITHUB_ENV 
-          echo ENVIRONMENT_LOWER="${ENVIRONMENT_LOWER}"               >> $GITHUB_ENV
-          echo APP_NAME="${APP_NAME}"                                 >> $GITHUB_ENV
-          echo APP_CONFIG="${ENVIRONMENT}_CONFIG"                     >> $GITHUB_ENV
-          echo APP_IMAGE="${REGISTRY_NAME}/${GITHUB_REPOSITORY,,}"    >> $GITHUB_ENV
-          echo APP_TAG="${GITHUB_SHA:0:8}-${GITHUB_RUN_NUMBER}"       >> $GITHUB_ENV
-          echo KUBE_CONFIG="MATRIX_${ENVIRONMENT}_AKS_KUBE_CONFIG"    >> $GITHUB_ENV
       - name: export keyvault
         env:
           AZ_USER: ${{ secrets.AKS_KV_USR }}
@@ -143,36 +127,11 @@ jobs:
           KEYVAULT="aks-matrix-${ENVIRONMENT_LOWER}"
           az login --service-principal -u $AZ_USER -p $AZ_PWD --tenant $AZ_TENANT
           az keyvault secret set --vault-name "${KEYVAULT}" --name "$APP_NAME" --value "${{ secrets[env.APP_CONFIG] }}"
-      - name: configure app
-        id: configure-app
+      - name: create .env
         run: |
-          echo "environment=${{ env.ENVIRONMENT_LOWER }}" >> $GITHUB_OUTPUT
-          echo "name=${{ env.APP_NAME }}"                 >> $GITHUB_OUTPUT
-          echo "revision=${{ env.APP_REVISION }}"         >> $GITHUB_OUTPUT
-          echo "image=${{ env.APP_IMAGE }}"               >> $GITHUB_OUTPUT
-          echo "tag=${{ env.APP_TAG }}"                   >> $GITHUB_OUTPUT
-          echo "kube_config=${{ env.KUBE_CONFIG }}"       >> $GITHUB_OUTPUT
-      - name: make yaml cfg plain
-        id: parseVars
-        run: |
-          wget -nv -q https://github.com/mikefarah/yq/releases/download/${{ env.YQ_VERSION }}/${{ env.YQ_BINARY }} -O yq
-          chmod +x yq
-          SECRET_CONFIG='${{ secrets[env.APP_CONFIG] }}'
-          if [[ -z "${SECRET_CONFIG}" ]]
-          then
-            echo "Seems your ${ENVIRONMENT}_CONFIG is not set or is empty"
-            RESULT="$( echo "NOCONFIG: true" | base64 -w0 )"
-            echo "result=${RESULT}" >> $GITHUB_OUTPUT
-          else
-            echo '${{ secrets[env.APP_CONFIG] }}' | base64 -d > .content
-            S_ENCODING=$(file -b --mime-encoding .content)
-            D_ENCODING='UTF-8//TRANSLIT'
-            iconv -f ${S_ENCODING^^} -t ${D_ENCODING} .content -o .content
-            echo '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' > .expression
-            yq e --no-colors --no-doc --from-file .expression .content > .result
-            RESULT="$( cat .result | base64 -w0 )"
-            echo "result=${RESULT}" >> $GITHUB_OUTPUT
-          fi
+          rm -rf .env
+          echo ${{ secrets[env.APP_CONFIG] }} | base64 -d > .env
+          cat .env
       - name: create .npmrc
         run: |
           rm -rf .npmrc
