@@ -1,10 +1,10 @@
-name: k8s Api v8
+name: k8s Api v9
 env:
   CLONE_TOKEN: GIT_TOKEN_CUSTOM
   PUBLISH_TOKEN: PACKAGES_TOKEN
   HELM_VERSION: v3.9.2
   CHART_REPOSITORY: 'Matrix-Energia/matrix.devops.template.charts.git'
-  CHART_REVISION: v8
+  CHART_REVISION: v9
   CHART_PATH: charts
   CHART_TYPE: api
   YQ_VERSION: v4.2.0
@@ -146,6 +146,7 @@ jobs:
         run: |
           helm upgrade ${{ steps.configure-app.outputs.name }}-${{ steps.configure-app.outputs.revision }} \
             ${{ env.CHART_PATH }}/${{ env.CHART_TYPE }} \
+            --atomic \
             --install \
             --wait \
             --timeout 6m0s \
