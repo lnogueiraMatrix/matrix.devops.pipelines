@@ -97,7 +97,7 @@ jobs:
           wget -nv -q https://github.com/mikefarah/yq/releases/download/${{ env.YQ_VERSION }}/${{ env.YQ_BINARY }} -O yq
           chmod +x yq
           echo $APP_CONFIG
-          echo $APP_CONFIG | base64 -d > .content
+          echo $APP_CONFIG | base64 -d >> .content
           S_ENCODING=$(file -b --mime-encoding .content)
           D_ENCODING='UTF-8//TRANSLIT'
           iconv -f ${S_ENCODING^^} -t ${D_ENCODING} .content -o .content
