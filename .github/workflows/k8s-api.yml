@@ -73,6 +73,7 @@ jobs:
           echo APP_TAG="${GITHUB_SHA:0:8}-${GITHUB_RUN_NUMBER}"       >> $GITHUB_ENV
           echo KUBE_CONFIG="MATRIX_${ENVIRONMENT}_AKS_KUBE_CONFIG"    >> $GITHUB_ENV
       - name: import keyvault
+        id: import-keyvault
         env:
           AZ_USER: ${{ secrets.AKS_KV_USR }}
           AZ_PWD: ${{ secrets.AKS_KV_PWD }}
@@ -91,6 +92,10 @@ jobs:
           echo "image=${{ env.APP_IMAGE }}"               >> $GITHUB_OUTPUT
           echo "tag=${{ env.APP_TAG }}"                   >> $GITHUB_OUTPUT
           echo "kube_config=${{ env.KUBE_CONFIG }}"       >> $GITHUB_OUTPUT
+      - name: configure values file
+        id: setup-values.yaml
+        run: |
+          cp .ci/${ENVIRONMENT_LOWER}-values.yaml .ci/values.yaml
       - name: make yaml cfg plain
         id: parseVars
         run: |
@@ -149,3 +154,4 @@ jobs:
             --set image='${{ steps.configure-app.outputs.image }}:${{ steps.configure-app.outputs.tag }}' \
             --set repository='${{ github.repository }}' \
             --set config='${{ steps.parseVars.outputs.result }}'
+          rm -r values.yaml
