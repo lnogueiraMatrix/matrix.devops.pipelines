@@ -93,7 +93,7 @@ jobs:
           echo "tag=${{ env.APP_TAG }}"                   >> $GITHUB_OUTPUT
           echo "kube_config=${{ env.KUBE_CONFIG }}"       >> $GITHUB_OUTPUT
       - name: configure values file
-        id: setup-values.yaml
+        id: setup-values-file
         run: |
           cp .ci/${ENVIRONMENT_LOWER}-values.yaml .ci/values.yaml
       - name: make yaml cfg plain
