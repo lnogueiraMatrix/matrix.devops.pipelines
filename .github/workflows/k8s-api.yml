@@ -154,4 +154,4 @@ jobs:
             --set image='${{ steps.configure-app.outputs.image }}:${{ steps.configure-app.outputs.tag }}' \
             --set repository='${{ github.repository }}' \
             --set config='${{ steps.parseVars.outputs.result }}'
-          rm -r values.yaml
+          rm -r .ci/values.yaml
