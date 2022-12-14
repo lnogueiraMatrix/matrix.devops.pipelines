@@ -1,10 +1,10 @@
-name: k8s Api v9
+name: k8s Api v8
 env:
   CLONE_TOKEN: GIT_TOKEN_CUSTOM
   PUBLISH_TOKEN: PACKAGES_TOKEN
   HELM_VERSION: v3.9.2
   CHART_REPOSITORY: 'Matrix-Energia/matrix.devops.template.charts.git'
-  CHART_REVISION: v9
+  CHART_REVISION: test-values-removed
   CHART_PATH: charts
   CHART_TYPE: api
   YQ_VERSION: v4.2.0
@@ -69,11 +69,11 @@ jobs:
           echo REGISTRY_PWD="MATRIX_${ENVIRONMENT}_ACR_PASSWORD"      >> $GITHUB_ENV 
           echo ENVIRONMENT_LOWER="${ENVIRONMENT_LOWER}"               >> $GITHUB_ENV
           echo APP_NAME="${APP_NAME}"                                 >> $GITHUB_ENV
-          echo APP_CONFIG="${ENVIRONMENT}_CONFIG"                     >> $GITHUB_ENV
           echo APP_IMAGE="${REGISTRY_NAME}/${GITHUB_REPOSITORY,,}"    >> $GITHUB_ENV
           echo APP_TAG="${GITHUB_SHA:0:8}-${GITHUB_RUN_NUMBER}"       >> $GITHUB_ENV
           echo KUBE_CONFIG="MATRIX_${ENVIRONMENT}_AKS_KUBE_CONFIG"    >> $GITHUB_ENV
-      - name: export keyvault
+      - name: import keyvault
+        id: import-keyvault
         env:
           AZ_USER: ${{ secrets.AKS_KV_USR }}
           AZ_PWD: ${{ secrets.AKS_KV_PWD }}
@@ -81,7 +81,8 @@ jobs:
         run: |
           KEYVAULT="aks-matrix-${ENVIRONMENT_LOWER}"
           az login --service-principal -u $AZ_USER -p $AZ_PWD --tenant $AZ_TENANT
-          az keyvault secret set --vault-name "${KEYVAULT}" --name "$APP_NAME" --value "${{ secrets[env.APP_CONFIG] }}"
+          az keyvault secret show --vault-name "${KEYVAULT}" --name "$APP_NAME" --query value -o tsv >> app-config.txt
+          cat app-config.txt >> $GITHUB_OUTPUT
       - name: configure app
         id: configure-app
         run: |
@@ -91,27 +92,24 @@ jobs:
           echo "image=${{ env.APP_IMAGE }}"               >> $GITHUB_OUTPUT
           echo "tag=${{ env.APP_TAG }}"                   >> $GITHUB_OUTPUT
           echo "kube_config=${{ env.KUBE_CONFIG }}"       >> $GITHUB_OUTPUT
+      - name: configure values file
+        id: setup-values-file
+        run: |
+          cp .ci/${ENVIRONMENT_LOWER}-values.yaml .ci/values.yaml
       - name: make yaml cfg plain
         id: parseVars
         run: |
           wget -nv -q https://github.com/mikefarah/yq/releases/download/${{ env.YQ_VERSION }}/${{ env.YQ_BINARY }} -O yq
           chmod +x yq
-          SECRET_CONFIG='${{ secrets[env.APP_CONFIG] }}'
-          if [[ -z "${SECRET_CONFIG}" ]]
-          then
-            echo "Seems your ${ENVIRONMENT}_CONFIG is not set or is empty"
-            RESULT="$( echo "NOCONFIG: true" | base64 -w0 )"
-            echo "result=${RESULT}" >> $GITHUB_OUTPUT
-          else
-            echo '${{ secrets[env.APP_CONFIG] }}' | base64 -d > .content
-            S_ENCODING=$(file -b --mime-encoding .content)
-            D_ENCODING='UTF-8//TRANSLIT'
-            iconv -f ${S_ENCODING^^} -t ${D_ENCODING} .content -o .content
-            echo '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' > .expression
-            yq e --no-colors --no-doc --from-file .expression .content > .result
-            RESULT="$( cat .result | base64 -w0 )"
-            echo "result=${RESULT}" >> $GITHUB_OUTPUT
-          fi
+          cat app-config.txt | base64 -d >> .content
+          S_ENCODING=$(file -b --mime-encoding .content)
+          D_ENCODING='UTF-8//TRANSLIT'
+          iconv -f ${S_ENCODING^^} -t ${D_ENCODING} .content -o .content
+          echo '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' > .expression
+          yq e --no-colors --no-doc --from-file .expression .content > .result
+          RESULT="$( cat .result | base64 -w0 )"
+          echo "result=${RESULT}" >> $GITHUB_OUTPUT
+          rm -r app-config.txt
       - name: docker login
         uses: Azure/docker-login@v1
         with:
@@ -156,3 +154,4 @@ jobs:
             --set image='${{ steps.configure-app.outputs.image }}:${{ steps.configure-app.outputs.tag }}' \
             --set repository='${{ github.repository }}' \
             --set config='${{ steps.parseVars.outputs.result }}'
+          rm -r .ci/values.yaml
