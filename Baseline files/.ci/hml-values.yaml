@@ -14,7 +14,7 @@ removePathPrefix: true      # If the path prefix - /<application_name> must be r
 rabbit:                     # Rabbit configuration:
     enable: false           # If you want to create the rabbit resources and credentials
 redis:                      # Redis configuration:
-  enabled: false             #   if the application uses it set enabled as true  
-#healthPath: /health         # Kubernetes will check this path to ensure app is runnin
+  enabled: true             #   if the application uses it set enabled as true  
+healthPath: /health         # Kubernetes will check this path to ensure app is runnin
 affinity:
   enabled: false            # must be set to false unless it's the dev file (dev-values.yaml)
