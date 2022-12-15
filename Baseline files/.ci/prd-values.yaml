@@ -1,0 +1,20 @@
+external: true              # If the Application can be exposed to the internet
+port: 80                    # Application port - Will be injected as "PORT" env var
+auth: 
+  enabled: false                 # Requires a authentication proxy - WIP, NOT WORKING
+replicas: 1                 # How many pods will be deployed to this application
+requests:
+  memory: "50Mi"
+  cpu: "75m"
+limits:
+  memory: "1Gi"
+  cpu: "600m"
+protocol: TCP               # Protocol - Almost always will be TCP
+removePathPrefix: true      # If the path prefix - /<application_name> must be removed at upstream
+rabbit:                     # Rabbit configuration:
+    enable: false           # If you want to create the rabbit resources and credentials
+redis:                      # Redis configuration:
+  enabled: false             #   if the application uses it set enabled as true  
+#healthPath: /health         # Kubernetes will check this path to ensure app is runnin
+affinity:
+  enabled: false            # must be set to false unless it's the dev file (dev-values.yaml)
