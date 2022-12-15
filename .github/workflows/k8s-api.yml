@@ -1,4 +1,4 @@
-name: k8s Api v8
+name: k8s Api v9
 env:
   CLONE_TOKEN: GIT_TOKEN_CUSTOM
   PUBLISH_TOKEN: PACKAGES_TOKEN
