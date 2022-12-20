@@ -1,0 +1,17 @@
+name: Build and Deploy
+ 
+on:
+  push:
+    branches:
+    - "main"
+    - "hml"
+    - "dev"
+ 
+jobs:
+  k8s-api:
+    uses: Matrix-Energia/matrix.devops.pipelines/.github/workflows/k8s-api.yml@<--set the pipeline version here-->
+    secrets: inherit
+    with:
+      namespace: matrix-apps  # Application Namespace ( Project/Product )
+      values: .ci/values.yaml # Where the app config is relative to root
+      tokenName: NPM_TOKEN    # Token to install dependencies - for using at pip or .npmrc
