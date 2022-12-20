@@ -52,12 +52,12 @@ jobs:
           echo "ENVIRONMENT=DEV" >> $GITHUB_ENV
           echo "APP_REVISION=${GITHUB_REF_NAME//\//-}" >> $GITHUB_ENV
       - name: hml
-        if: (github.ref_name == 'hml' && github.ref_name == 'k8s-hml')
+        if: (github.ref_name == 'hml' || github.ref_name == 'k8s-hml')
         run: |
           echo "ENVIRONMENT=HML" >> $GITHUB_ENV
           echo "APP_REVISION=hml" >> $GITHUB_ENV
       - name: prd
-        if: (github.ref_name == 'main' && github.ref_name == 'k8s-prd')
+        if: (github.ref_name == 'main' || github.ref_name == 'k8s-prd')
         run: |
           echo "ENVIRONMENT=PRD" >> $GITHUB_ENV
           echo "APP_REVISION=prd" >> $GITHUB_ENV
