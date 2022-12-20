@@ -42,21 +42,30 @@ jobs:
           submodules: recursive
           token: ${{ secrets[env.CLONE_TOKEN] }}
       - name: dev
-        if: ( github.ref_name != 'main' && github.ref_name != 'hml' )
+        if: ( github.ref_name != 'main' && github.ref_name != 'k8s-prd' && github.ref_name != 'hml' && github.ref_name != 'k8s-hml')
         run: |
-          REV_NAME=${GITHUB_REF_NAME,,}
-          echo "ENVIRONMENT=DEV"                    >> $GITHUB_ENV                  
-          echo "APP_REVISION=${REV_NAME//\//-}"     >> $GITHUB_ENV
+          echo "ENVIRONMENT=DEV" >> $GITHUB_ENV
+          echo "APP_REVISION=${GITHUB_REF_NAME//\//-}" >> $GITHUB_ENV
       - name: hml
         if: github.ref_name == 'hml'
         run: |
-          echo "ENVIRONMENT=HML"                    >> $GITHUB_ENV
-          echo "APP_REVISION=hml"                   >> $GITHUB_ENV
+          echo "ENVIRONMENT=HML" >> $GITHUB_ENV
+          echo "APP_REVISION=hml" >> $GITHUB_ENV
+      - name: hml-k8s
+        if: github.ref_name == 'k8s-hml'
+        run: |
+          echo "ENVIRONMENT=HML" >> $GITHUB_ENV
+          echo "APP_REVISION=hml" >> $GITHUB_ENV
       - name: prd
         if: github.ref_name == 'main'
         run: |
-          echo "ENVIRONMENT=PRD"                    >> $GITHUB_ENV
-          echo "APP_REVISION=prd"                   >> $GITHUB_ENV
+          echo "ENVIRONMENT=PRD" >> $GITHUB_ENV
+          echo "APP_REVISION=prd" >> $GITHUB_ENV
+      - name: prd-k8s
+        if: github.ref_name == 'k8s-prd'
+        run: |
+          echo "ENVIRONMENT=PRD" >> $GITHUB_ENV
+          echo "APP_REVISION=prd" >> $GITHUB_ENV
       - name: set-vars
         run: |
           APP_NAME="${GITHUB_REPOSITORY/'Matrix-Energia/'/}"

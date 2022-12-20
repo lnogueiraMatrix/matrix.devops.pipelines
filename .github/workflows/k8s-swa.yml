@@ -47,7 +47,7 @@ jobs:
           submodules: recursive
           token: ${{ secrets.GIT_TOKEN_CUSTOM }}
       - name: dev
-        if: ( github.ref_name != 'main' && github.ref_name != 'hml' )
+        if: ( github.ref_name != 'main' && github.ref_name != 'k8s-prd' && github.ref_name != 'hml' && github.ref_name != 'k8s-hml')
         run: |
           echo "ENVIRONMENT=DEV" >> $GITHUB_ENV
           echo "APP_REVISION=${GITHUB_REF_NAME//\//-}" >> $GITHUB_ENV
@@ -56,8 +56,18 @@ jobs:
         run: |
           echo "ENVIRONMENT=HML" >> $GITHUB_ENV
           echo "APP_REVISION=hml" >> $GITHUB_ENV
+      - name: hml-k8s
+        if: github.ref_name == 'k8s-hml'
+        run: |
+          echo "ENVIRONMENT=HML" >> $GITHUB_ENV
+          echo "APP_REVISION=hml" >> $GITHUB_ENV
       - name: prd
         if: github.ref_name == 'main'
+        run: |
+          echo "ENVIRONMENT=PRD" >> $GITHUB_ENV
+          echo "APP_REVISION=prd" >> $GITHUB_ENV
+      - name: prd-k8s
+        if: github.ref_name == 'k8s-prd'
         run: |
           echo "ENVIRONMENT=PRD" >> $GITHUB_ENV
           echo "APP_REVISION=prd" >> $GITHUB_ENV
