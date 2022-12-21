@@ -10,7 +10,7 @@ on:
     
 jobs:
   call-shared-workflow:
-    uses: Matrix-Energia/matrix.devops.pipelines/.github/workflows/k8s-swa.yml@<--set the pipeline version here-->
+    uses: Matrix-Energia/matrix.devops.pipelines/.github/workflows/k8s-swa.yml@v9
     secrets: inherit
     with:
       node-version: 16.14.2
