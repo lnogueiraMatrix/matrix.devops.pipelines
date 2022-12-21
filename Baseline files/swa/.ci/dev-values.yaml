@@ -1,0 +1,2 @@
+affinity:
+  enabled: true             # must be set to false unless it's the dev file (dev-values.yaml)
