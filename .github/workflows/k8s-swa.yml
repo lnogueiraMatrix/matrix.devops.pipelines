@@ -1,11 +1,11 @@
-name: k8s SWA v8
+name: k8s SWA v9 - Test Environment
 # SWA Uses a .env instead of .yaml encoded file
 env:
   HELM_VERSION: v3.9.2
-  CHART_REVISION: v8
+  CHART_REVISION: v9
   CHART_PATH: _CHARTS_
   CHART_TYPE: webpage
-  PIPELINE_REVISION: v8
+  PIPELINE_REVISION: v9
   PIPELINE_PATH: _PIPELINE_
   DOCKERFILE_PATH: Dockerfiles/swa
   OUT_DIR: TMP_OUT

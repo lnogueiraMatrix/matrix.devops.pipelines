@@ -1,4 +1,4 @@
-name: k8s Api v9
+name: k8s Api v9 - Test Environment
 env:
   CLONE_TOKEN: GIT_TOKEN_CUSTOM
   PUBLISH_TOKEN: PACKAGES_TOKEN
