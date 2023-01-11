@@ -2,7 +2,7 @@ name: k8s SWA v9 - Test Environment
 # SWA Uses a .env instead of .yaml encoded file
 env:
   HELM_VERSION: v3.9.2
-  CHART_REVISION: v9
+  CHART_REVISION: add-affinity-for-spot
   CHART_PATH: _CHARTS_
   CHART_TYPE: webpage
   PIPELINE_REVISION: v9
