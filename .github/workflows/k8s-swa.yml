@@ -1,11 +1,11 @@
-name: k8s SWA v8
+name: k8s SWA v9
 # SWA Uses a .env instead of .yaml encoded file
 env:
   HELM_VERSION: v3.9.2
-  CHART_REVISION: v8
+  CHART_REVISION: v9
   CHART_PATH: _CHARTS_
   CHART_TYPE: webpage
-  PIPELINE_REVISION: v8
+  PIPELINE_REVISION: v9
   PIPELINE_PATH: _PIPELINE_
   DOCKERFILE_PATH: Dockerfiles/swa
   OUT_DIR: TMP_OUT
@@ -130,6 +130,7 @@ jobs:
       - name: setup-values-file
         run: |
           cp .ci/${ENVIRONMENT_LOWER}-values.yaml .ci/values.yaml
+# Importing and setting up environment variables from keyvault
       - name: import keyvault
         env:
           AZ_USER: ${{ secrets.AKS_KV_USR }}
@@ -150,6 +151,7 @@ jobs:
           echo "@matrix-energia:registry=https://npm.pkg.github.com" > .npmrc
           echo "//npm.pkg.github.com/:_authToken=${{ secrets.PACKAGES_TOKEN }}" >> .npmrc
           cat .npmrc
+# Build steps
       - name: build application
         run: |
           ${{ inputs.build-command }}
@@ -170,7 +172,7 @@ jobs:
 # Install to Cluster
       - name: install helm chart
         run: |
-          helm upgrade -f .ci/values.yaml ${{ env.APP_NAME }}-${{ env.APP_REVISION }} \
+          helm upgrade -f ${{ env.APP_NAME }}-${{ env.APP_REVISION }} \
             ${{ env.CHART_PATH }}/${{ env.CHART_TYPE }} \
             --install \
             --namespace '${{ inputs.namespace }}' \
