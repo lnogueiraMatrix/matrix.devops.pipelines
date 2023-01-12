@@ -127,9 +127,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ inputs.node-version }}
-      - name: setup-values-file
-        run: |
-          cp .ci/${ENVIRONMENT_LOWER}-values.yaml .ci/values.yaml
 # Importing and setting up environment variables from keyvault
       - name: import keyvault
         env:
