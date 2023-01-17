@@ -140,7 +140,7 @@ jobs:
       - name: create .env
         run: |
           rm -rf .env
-          echo app-config.txt | base64 -d > .env
+          cat app-config.txt | base64 -d >> .env
           cat .env
       - name: create .npmrc
         run: |
