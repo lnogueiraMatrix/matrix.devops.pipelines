@@ -41,6 +41,7 @@ jobs:
         with:
           submodules: recursive
           token: ${{ secrets[env.CLONE_TOKEN] }}
+          fetch-depth: 0
       - name: dev
         if: ( github.ref_name != 'main' && github.ref_name != 'k8s-prd' && github.ref_name != 'hml' && github.ref_name != 'k8s-hml')
         run: |
@@ -118,6 +119,12 @@ jobs:
           RESULT="$( cat .result | base64 -w0 )"
           echo "result=${RESULT}" >> $GITHUB_OUTPUT
           rm -r app-config.txt
+          
+      - name: sonarqube tests
+        uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}  
       - name: docker login
         uses: Azure/docker-login@v1
         with:
