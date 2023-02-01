@@ -120,7 +120,7 @@ jobs:
           echo "result=${RESULT}" >> $GITHUB_OUTPUT
           rm -r app-config.txt
       - name: env injection
-        run: sed -ie 'sonar.user=${{secrets.SONAR_USER}} \n sonar.password=${{secrets.SONAR_PASSWORD}}' sonar-project.properties   
+        run: sed -ie '1 asonar.user=${{secrets.SONAR_USER}} \n sonar.password=${{secrets.SONAR_PASSWORD}}' sonar-project.properties   
       - name: sonarqube tests
         uses: sonarsource/sonarqube-scan-action@master
         env:
