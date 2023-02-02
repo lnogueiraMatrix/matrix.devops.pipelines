@@ -29,11 +29,10 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
-      - name: Build with Maven
-        run: mvn package --file pom.xml && pwd && ls -la
+      #- name: Build with Maven
+       # run: mvn package --file pom.xml && pwd && ls -la
       - name: Deploy to Nexus
         run: |
-          ls -la && pwd && \
           mvn deploy:deploy-file \
             -Durl=${{env.SERVER_HOST}} \
             -DrepositoryId=${{ env.APP_NAME }}-${{ env.ENVIRONMENT_LOWER }} \
