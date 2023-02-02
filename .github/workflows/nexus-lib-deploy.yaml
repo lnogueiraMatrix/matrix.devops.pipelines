@@ -36,11 +36,11 @@ jobs:
           ls -la && pwd && \
           mvn deploy:deploy-file \
             -Durl=${{env.SERVER_HOST}} \
-            -DrepositoryId=${{ env.APP_NAME }}${{ env.ENVIRONMENT_LOWER }} \
+            -DrepositoryId=${{ env.APP_NAME }}-${{ env.ENVIRONMENT_LOWER }} \
             -DgroupId=com.matrix \
             -DartifactId=${{ env.APP_NAME }} \
             -Dversion=1.0.0 \
-            -Dpackaging=pom \
+            -Dpackaging=xml \
             -Dfile=/home/runner/work/matrix.java.ms.lib/matrix.java.ms.lib/pom.xml \
             -DgeneratePom=true \
             -DpomFile=pom.xml \
