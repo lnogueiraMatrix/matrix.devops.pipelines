@@ -33,18 +33,16 @@ jobs:
           java-version: 1.8
       - name: Build with Maven
         run: mvn package --file pom.xml && pwd && ls -la
-      - name: Deploy to Nexus
-        run: |
-          ls -la && pwd && \
-          mvn deploy:deploy-file \
-            -Durl=${{env.SERVER_HOST}} \
-            -DrepositoryId=${{ env.APP_NAME }}-${{ env.ENVIRONMENT_LOWER }} \
-            -DgroupId=com.matrix \
-            -DartifactId=${{ env.APP_NAME }} \
-            -Dversion=1.0.0 \
-            -Dpackaging=xml \
-            -Dfile=/home/runner/work/matrix.java.ms.lib/matrix.java.ms.lib/pom.xml \
-            -DgeneratePom=true \
-            -DpomFile=pom.xml \
-            -Dusername=admin \
-            -Dpassword=${{ secrets.NEXUS_PASSWORD }}
+      - name: Nexus Repo Publish
+        uses: sonatype-nexus-community/nexus-repo-github-action@master
+        with:
+          serverUrl: ${{ secrets.NEXUS_HOST }}
+          username: admin
+          password: ${{ secrets.NEXUS_PASSWORD }}
+          format: maven2
+          repository: ${{ env.APP_NAME }}${{ env.ENVIRONMENT_LOWER }}
+          coordinates: groupId=com.matrix artifactId=${{ env.APP_NAME }} version=1.0.0
+          assets: extension=xml
+          filename: pom.xml
+
+      
