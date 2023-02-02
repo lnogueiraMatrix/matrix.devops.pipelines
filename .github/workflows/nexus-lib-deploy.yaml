@@ -33,6 +33,7 @@ jobs:
         run: mvn package --file pom.xml && pwd && ls -la
       - name: Deploy to Nexus
         run: |
+          ls -la && pwd && \
           mvn deploy:deploy-file \
             -Durl=${{env.SERVER_HOST}} \
             -DrepositoryId=${{ env.APP_NAME }}${{ env.ENVIRONMENT_LOWER }} \
