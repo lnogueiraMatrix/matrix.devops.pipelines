@@ -41,7 +41,7 @@ jobs:
             -DartifactId=${{ env.APP_NAME }} \
             -Dversion=1.0.0 \
             -Dpackaging=pom \
-            -Dfile=path/to/my-project-${{ env.TAG_NAME }}.jar \
+            -Dfile=/home/runner/work/matrix.java.ms.lib/matrix.java.ms.lib/pom.xml \
             -DgeneratePom=true \
             -DpomFile=pom.xml \
             -Dusername=admin \
