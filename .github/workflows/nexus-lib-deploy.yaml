@@ -40,7 +40,7 @@ jobs:
             -DgroupId=com.matrix \
             -DartifactId=${{ env.APP_NAME }} \
             -Dversion=1.0.0 \
-            -Dpackaging=xml \
+            -Dpackaging=pom \
             -Dfile=/home/runner/work/matrix.java.ms.lib/matrix.java.ms.lib/pom.xml \
             -DgeneratePom=true \
             -DpomFile=pom.xml \
