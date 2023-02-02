@@ -1,4 +1,4 @@
-name: Java with Nexus Repository 
+name: Java with Nexus Repository  
 
 on: 
   workflow_call:
