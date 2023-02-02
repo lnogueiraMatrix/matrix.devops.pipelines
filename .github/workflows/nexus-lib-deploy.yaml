@@ -10,10 +10,10 @@ jobs:
       - name: snapshots
         if: ( github.ref_name != 'releases')
         run: |
-          echo "ENVIRONMENT=SNAPSHOTS" >> $GITHUB_ENV
+          echo "ENVIRONMENT=SNAPSHOT" >> $GITHUB_ENV
           echo "APP_REVISION=${GITHUB_REF_NAME//\//-}" >> $GITHUB_ENV
-      - name: releases
-        if: github.ref_name == 'releases'
+      - name: main
+        if: github.ref_name == 'main'
         run: |
           echo "ENVIRONMENT=RELEASES" >> $GITHUB_ENV
           echo "APP_REVISION=RELEASES" >> $GITHUB_ENV
