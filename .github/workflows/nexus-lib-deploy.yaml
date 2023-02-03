@@ -22,7 +22,8 @@ jobs:
           APP_NAME="${GITHUB_REPOSITORY/'Matrix-Energia/'/}"
           APP_NAME="${APP_NAME/matrix./}"
           ENVIRONMENT_LOWER="${ENVIRONMENT,,}"
-          echo ${{ secrets.NEXUS_HOST }}
+          echo ${{ secrets.NEXUS_HOST }} > test
+          cat test
       #SERVER_HOST="${{ secrets.NEXUS_HOST }}"
             
       - uses: actions/checkout@v1
