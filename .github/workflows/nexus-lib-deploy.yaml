@@ -1,5 +1,4 @@
-name: Java with Nexus Repository 
-
+name: Java with Nexus Repository
 on: 
   workflow_call:
 
@@ -11,8 +10,23 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
+    - name: snapshots
+      if: ( github.ref_name != 'releases')
+      run: |
+          echo "ENVIRONMENT=SNAPSHOT" >> $GITHUB_ENV
+          echo "APP_REVISION=${GITHUB_REF_NAME//\//-}" >> $GITHUB_ENV
+    - name: main
+      if: github.ref_name == 'main'
+      run: |
+          echo "ENVIRONMENT=RELEASES" >> $GITHUB_ENV
+          echo "APP_REVISION=RELEASES" >> $GITHUB_ENV
+    - name: set-vars
+      run: |
+          APP_NAME="${GITHUB_REPOSITORY/'Matrix-Energia/'/}"
+          APP_NAME="${APP_NAME/matrix./}"
+          ENVIRONMENT_LOWER="${ENVIRONMENT,,}"
     - name: Build with Maven
-      run: mvn package --file pom.xml && pwd && ls -la
+      run: mvn package --file pom.xml
     - name: Nexus Repo Publish
       uses: sonatype-nexus-community/nexus-repo-github-action@master
       with:
