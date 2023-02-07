@@ -120,11 +120,14 @@ jobs:
           echo "result=${RESULT}" >> $GITHUB_OUTPUT
           rm -r app-config.txt
       - name: env injection
-        run: sed -ie '1 asonar.login=${{secrets.SONAR_USER}} \n sonar.password=${{secrets.SONAR_PASSWORD}}' sonar-project.properties | cat sonar-project.properties  
-      - uses: sonarsource/sonarqube-scan-action@master
+        run: sed -ie '1 asonar.login=${{secrets.SONAR_USER}} \n sonar.password=${{secrets.SONAR_PASSWORD}}' sonar-project.properties | cat sonar-project.properties
+#       ---
+        if: github.ref_name == 'feature/v9-pipeline'
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+#       ---
+      - uses: sonarsource/sonarqube-scan-action@master
       - name: docker login
         uses: Azure/docker-login@v1
         with:
