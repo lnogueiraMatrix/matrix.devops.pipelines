@@ -123,22 +123,22 @@ jobs:
         run: sed -ie '1 asonar.login=${{secrets.SONAR_USER}} \n sonar.password=${{secrets.SONAR_PASSWORD}}' sonar-project.properties | cat sonar-project.properties
 
 #       ConfigSonar > Pyhton, Node, JS...
-      # - uses: sonarsource/sonarqube-scan-action@master
-      #   env:
-      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      #     SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      - uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 #       ConfigSonar > Pyhton, Node, JS...
 
 #       ConfigSonar > Java (Mavem)
-      - uses: actions/setup-java@v1
-        with:
-          java-version: 17
-      - name: Build and analyze
-        env:
-          # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} > ALTERAR PARA O NOME CORRETO
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=Matrix-Energia_matrix.external.partner.api_AYYs_EZNKWhVh66QZUwx # ADICIONAR O TOKEN NO VALT/SECRETS
+#       - uses: actions/setup-java@v1
+#         with:
+#           java-version: 17
+#       - name: Build and analyze
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.GIT_TOKEN_CUSTOM }} > ALTERAR PARA O NOME CORRETO
+#           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+#           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+#         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=Matrix-Energia_matrix.external.partner.api_AYYs_EZNKWhVh66QZUwx # ADICIONAR O TOKEN NO VALT/SECRETS?
 #       ConfigSonar > Java (Mavem)
 
       - name: docker login
