@@ -157,6 +157,16 @@ jobs:
           cp -rf ${{ inputs.output-dir }}/* ${{ env.OUT_DIR }}/
           echo "Output Files: "
           ls -lah ${{ env.OUT_DIR }}
+
+      - name: env injection
+        run: sed -ie '1 asonar.login=${{secrets.SONAR_USER}} \n sonar.password=${{secrets.SONAR_PASSWORD}}' sonar-project.properties | cat sonar-project.properties
+#       ConfigSonar > Pyhton, Node, JS...
+      - uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+#       ConfigSonar > Pyhton, Node, JS...
+
       - name: docker build
         run: |
           docker build \
