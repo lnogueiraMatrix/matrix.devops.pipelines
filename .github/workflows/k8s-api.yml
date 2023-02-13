@@ -122,31 +122,36 @@ jobs:
       - name: env injection
         run: sed -ie '1 asonar.login=${{secrets.SONAR_USER}} \n sonar.password=${{secrets.SONAR_PASSWORD}}' sonar-project.properties | cat sonar-project.properties
 
+#     ------ Ambiente de Teste ------
+
       - name: get repo language
         id: vrl
-        run: echo "VRF_CONFIG_TEST_SONAR=$(find . -name cypress.config.js)" >> $GITHUB_OUTPUT
+        run: echo "VRF_CONFIG_TEST_SONAR=$(find . -name pom.xml)" >> $GITHUB_OUTPUT
 
-      - name: verify repo language
-        run: echo "${{ steps.vrl.outputs.VRF_CONFIG_TEST_SONAR }}"
-
+      - name: Test - Python, JS...
+        if: steps.vrl.outputs.VRF_CONFIG_TEST_SONAR == ""
 #       ConfigSonar > Pyhton, Node, JS...
-      - uses: sonarsource/sonarqube-scan-action@master
+        uses: sonarsource/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 #       ConfigSonar > Pyhton, Node, JS...
 
+      - name: Test - Maven
+        if: steps.vrl.outputs.VRF_CONFIG_TEST_SONAR == "pom.xml"
 #       ConfigSonar > Java (Mavem)
-#       - uses: actions/setup-java@v1
-#         with:
-#           java-version: 17
-#       - name: Build and analyze
-#         env:
-#           GITHUB_TOKEN: ${{ secrets.GIT_TOKEN_CUSTOM }}
-#           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-#           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-#         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=Matrix-Energia_matrix.external.partner.api_AYYs_EZNKWhVh66QZUwx
+        uses: actions/setup-java@v1
+        with:
+          java-version: 17
+
+        env:
+          GITHUB_TOKEN: ${{ secrets.GIT_TOKEN_CUSTOM }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=Matrix-Energia_matrix.external.partner.api_AYYs_EZNKWhVh66QZUwx
 #       ConfigSonar > Java (Mavem)
+
+#     ------ Ambiente de Teste ------
 
       - name: docker login
         uses: Azure/docker-login@v1
