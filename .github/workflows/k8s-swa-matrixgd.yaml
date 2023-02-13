@@ -4,7 +4,7 @@ env:
   HELM_VERSION: v3.9.2
   CHART_REVISION: v9-matrixgd
   CHART_PATH: _CHARTS_
-  CHART_TYPE: webpage
+  CHART_TYPE: webpage-gd
   PIPELINE_REVISION: v9
   PIPELINE_PATH: _PIPELINE_
   DOCKERFILE_PATH: Dockerfiles/swa

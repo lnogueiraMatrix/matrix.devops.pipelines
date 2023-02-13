@@ -6,7 +6,7 @@ env:
   CHART_REPOSITORY: 'Matrix-Energia/matrix.devops.template.charts.git'
   CHART_REVISION: v9-matrixgd
   CHART_PATH: charts
-  CHART_TYPE: api
+  CHART_TYPE: api-gd
   YQ_VERSION: v4.2.0
   YQ_BINARY: yq_linux_amd64
 on:
