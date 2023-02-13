@@ -122,6 +122,13 @@ jobs:
       - name: env injection
         run: sed -ie '1 asonar.login=${{secrets.SONAR_USER}} \n sonar.password=${{secrets.SONAR_PASSWORD}}' sonar-project.properties | cat sonar-project.properties
 
+      - name: get repo language
+        id: vrl
+        run: echo "VRF_CONFIG_TEST_SONAR=$(find . -name cypress.config.js)" >> $GITHUB_OUTPUT
+
+      - name: verify repo language
+        run: echo "${{ steps.vrl.outputs.VRF_CONFIG_TEST_SONAR }}"
+
 #       ConfigSonar > Pyhton, Node, JS...
       - uses: sonarsource/sonarqube-scan-action@master
         env:
