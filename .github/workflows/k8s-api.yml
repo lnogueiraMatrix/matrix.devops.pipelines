@@ -124,33 +124,30 @@ jobs:
 
 #     ------ Ambiente de Teste ------
 
-      - name: get repo language
+      - name: GET Language
         id: vrl
         run: echo "VRF_CONFIG_TEST_SONAR=$(find . -name pom.xml)" >> $GITHUB_OUTPUT
 
-      - name: Test - Python, JS...
-        if: steps.vrl.outputs.VRF_CONFIG_TEST_SONAR == ""
 #       ConfigSonar > Pyhton, Node, JS...
+      - name: Sonarquebe - Python, Node, JS/TS...
         uses: sonarsource/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 #       ConfigSonar > Pyhton, Node, JS...
 
-      - name: Setup Workspace - Maven
-        if: steps.vrl.outputs.VRF_CONFIG_TEST_SONAR == "pom.xml"
 #       ConfigSonar > Java (Mavem)
-        uses: actions/setup-java@v1
-        with:
-          java-version: 17
+      # - name: Setup JDK
+      #   uses: actions/setup-java@v1
+      #   with:
+      #     java-version: 17
 
-      - name: Test - Maven
-        if: steps.vrl.outputs.VRF_CONFIG_TEST_SONAR == "pom.xml"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GIT_TOKEN_CUSTOM }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=Matrix-Energia_matrix.external.partner.api_AYYs_EZNKWhVh66QZUwx
+      # - name: Sonarquebe - Mavem(Java)...
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GIT_TOKEN_CUSTOM }}
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      #     SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      #   run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=Matrix-Energia_matrix.external.partner.api_AYYs_EZNKWhVh66QZUwx
 #       ConfigSonar > Java (Mavem)
 
 #     ------ Ambiente de Teste ------
