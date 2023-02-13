@@ -137,13 +137,15 @@ jobs:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 #       ConfigSonar > Pyhton, Node, JS...
 
-      - name: Test - Maven
+      - name: Setup Workspace - Maven
         if: steps.vrl.outputs.VRF_CONFIG_TEST_SONAR == "pom.xml"
 #       ConfigSonar > Java (Mavem)
         uses: actions/setup-java@v1
         with:
           java-version: 17
 
+      - name: Test - Maven
+        if: steps.vrl.outputs.VRF_CONFIG_TEST_SONAR == "pom.xml"
         env:
           GITHUB_TOKEN: ${{ secrets.GIT_TOKEN_CUSTOM }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
