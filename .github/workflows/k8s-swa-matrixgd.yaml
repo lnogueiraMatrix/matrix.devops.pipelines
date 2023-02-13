@@ -2,7 +2,7 @@ name: k8s SWA v9
 # SWA Uses a .env instead of .yaml encoded file
 env:
   HELM_VERSION: v3.9.2
-  CHART_REVISION: v9
+  CHART_REVISION: v9-matrixgd
   CHART_PATH: _CHARTS_
   CHART_TYPE: webpage
   PIPELINE_REVISION: v9
@@ -23,7 +23,7 @@ on:
       namespace:
         type: string
         required: false
-        default: matrix-webpages
+        default: matrixgd-webpages
       external:
         type: boolean
         required: false
@@ -74,7 +74,7 @@ jobs:
       - name: configure variables
         run: |
           APP_NAME=${GITHUB_REPOSITORY/'Matrix-Energia/'/}
-          APP_NAME=${APP_NAME/matrix./}
+          APP_NAME=${APP_NAME/matrix.gd./} 
           APP_NAME=${APP_NAME//./-}
           ENVIRONMENT_LOWER="${ENVIRONMENT,,}"
           REGISTRY_NAME=${ENVIRONMENT_LOWER}akscr.azurecr.io
