@@ -88,7 +88,7 @@ jobs:
           AZ_PWD: ${{ secrets.AKS_KV_PWD }}
           AZ_TENANT: ${{ secrets.AKS_KV_TENANT}}
         run: |
-          KEYVAULT="aks-matrixgd-${ENVIRONMENT_LOWER}"
+          KEYVAULT="aks-gd-${ENVIRONMENT_LOWER}"
           az login --service-principal -u $AZ_USER -p $AZ_PWD --tenant $AZ_TENANT
           az keyvault secret show --vault-name "${KEYVAULT}" --name "$APP_NAME" --query value -o tsv >> app-config.txt
       - name: configure app
