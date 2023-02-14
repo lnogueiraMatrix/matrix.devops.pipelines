@@ -8,7 +8,7 @@ env:
   PIPELINE_REVISION: v9
   PIPELINE_PATH: _PIPELINE_
   DOCKERFILE_PATH: Dockerfiles/swa
-  OUT_DIR: TMP_OUT
+  OUT_DIR: build
 on:
   workflow_call:
     inputs:
