@@ -5,5 +5,5 @@ RUN rm -rf ./*
 ADD TMP_OUT  ./
 COPY .env ./
 RUN apk add vim
-EXPOSE 8080
+EXPOSE 80
 CMD [ "nginx", "-g", "daemon off;" ]
