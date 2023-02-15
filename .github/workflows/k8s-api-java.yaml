@@ -136,12 +136,12 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
-      - name: Sonarquebe - Mavem(Java)...
+      - name: Sonarquebe - Maven(Java)...
         env:
            GITHUB_TOKEN: ${{ secrets.GIT_TOKEN_CUSTOM }}
            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
            SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=${{ secrets.PROJECT_KEY }} -Dspring.profiles.active=test
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=${{ secrets.PROJECT_KEY }}
       - name: docker login
         uses: Azure/docker-login@v1
         with:
