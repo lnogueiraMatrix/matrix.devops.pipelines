@@ -123,12 +123,13 @@ jobs:
         uses: actions/setup-java@v1
         with:
            java-version: 17
+
       - name: Sonarquebe - Mavem(Java)...
         env:
            GITHUB_TOKEN: ${{ secrets.GIT_TOKEN_CUSTOM }}
            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
            SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=Matrix-Energia_matrix.external.partner.api_AYYs_EZNKWhVh66QZUwx
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=${{ secret.PROJECT_KEY }}
       - name: docker login
         uses: Azure/docker-login@v1
         with:
