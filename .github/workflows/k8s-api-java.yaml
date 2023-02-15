@@ -141,7 +141,7 @@ jobs:
            GITHUB_TOKEN: ${{ secrets.GIT_TOKEN_CUSTOM }}
            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
            SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=${{ secrets.PROJECT_KEY }}
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=${{ secrets.PROJECT_KEY }} -Dspring.profiles.active=test
       - name: docker login
         uses: Azure/docker-login@v1
         with:
