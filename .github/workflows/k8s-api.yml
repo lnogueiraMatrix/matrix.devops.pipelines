@@ -119,38 +119,12 @@ jobs:
           RESULT="$( cat .result | base64 -w0 )"
           echo "result=${RESULT}" >> $GITHUB_OUTPUT
           rm -r app-config.txt
-      - name: env injection
-        run: sed -ie '1 asonar.login=${{secrets.SONAR_USER}} \n sonar.password=${{secrets.SONAR_PASSWORD}}' sonar-project.properties | cat sonar-project.properties
 
-#     ------ Ambiente de Teste ------
-
-      - name: GET Language
-        id: vrl
-        run: echo "VRF_CONFIG_TEST_SONAR=$(find . -name pom.xml)" >> $GITHUB_OUTPUT
-
-#       ConfigSonar > Pyhton, Node, JS...
       - name: Sonarquebe - Python, Node, JS/TS...
         uses: sonarsource/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-#       ConfigSonar > Pyhton, Node, JS...
-
-#       ConfigSonar > Java (Mavem)
-      # - name: Setup JDK
-      #   uses: actions/setup-java@v1
-      #   with:
-      #     java-version: 17
-
-      # - name: Sonarquebe - Mavem(Java)...
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GIT_TOKEN_CUSTOM }}
-      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      #     SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-      #   run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=Matrix-Energia_matrix.external.partner.api_AYYs_EZNKWhVh66QZUwx
-#       ConfigSonar > Java (Mavem)
-
-#     ------ Ambiente de Teste ------
 
       - name: docker login
         uses: Azure/docker-login@v1
