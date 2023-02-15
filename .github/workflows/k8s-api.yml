@@ -148,10 +148,6 @@ jobs:
           ref: ${{ env.CHART_REVISION }}
           path: ${{ env.CHART_PATH }}
           token: ${{ secrets[env.CLONE_TOKEN] }}
-      # - name: template helm
-      #   run: |
-      #     helm template ${{ steps.configure-app.outputs.name }}-${{ steps.configure-app.outputs.revision }} \
-      #       ${{ env.CHART_PATH }}/${{ env.CHART_TYPE }} --values '${{ inputs.values }}' --debug
       - name: install app
         run: |
           helm upgrade ${{ steps.configure-app.outputs.name }}-${{ steps.configure-app.outputs.revision }} \
