@@ -81,6 +81,7 @@ jobs:
           echo APP_IMAGE="${REGISTRY_NAME}/${GITHUB_REPOSITORY,,}"    >> $GITHUB_ENV
           echo APP_TAG="${GITHUB_SHA:0:8}-${GITHUB_RUN_NUMBER}"       >> $GITHUB_ENV
           echo KUBE_CONFIG="MATRIX_${ENVIRONMENT}_AKS_KUBE_CONFIG"    >> $GITHUB_ENV
+          echo GOOGLE_KEY="{secrets.GOOGLE_JSON}"                     >> $GITHUB_ENV
       - name: import keyvault
         id: import-keyvault
         env:
@@ -100,6 +101,10 @@ jobs:
           echo "image=${{ env.APP_IMAGE }}"               >> $GITHUB_OUTPUT
           echo "tag=${{ env.APP_TAG }}"                   >> $GITHUB_OUTPUT
           echo "kube_config=${{ env.KUBE_CONFIG }}"       >> $GITHUB_OUTPUT
+      - name:  configure json file
+        run: | 
+              echo "{{ secrets.GOOGLE_JSON }}" > matrix-gd-07d55ffede24.json
+              echo "{{ secrets.CONFIG_JSON }}" > matrix-gd-c94fe3546b2c.json
       - name: configure values file
         id: setup-values-file
         run: |
