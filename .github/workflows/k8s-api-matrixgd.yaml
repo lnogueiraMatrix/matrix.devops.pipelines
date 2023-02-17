@@ -104,8 +104,8 @@ jobs:
           echo "kube_config=${{ env.KUBE_CONFIG }}"       >> $GITHUB_OUTPUT
       - name:  configure json file
         run: | 
-              cat "{{ secrets.GOOGLE_JSON }}" > matrix-gd-07d55ffede24.json
-              cat "{{ secrets.CONFIG_JSON }}" > matrix-gd-c94fe3546b2c.json
+              echo "{{ secrets.GOOGLE_JSON }}" | base64 -d >> matrix-gd-07d55ffede24.json
+              cat "{{ secrets.CONFIG_JSON }}"  | base64 -d >> matrix-gd-c94fe3546b2c.json
       - name: configure values file
         id: setup-values-file
         run: |
