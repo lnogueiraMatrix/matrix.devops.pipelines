@@ -103,11 +103,15 @@ jobs:
           echo "tag=${{ env.APP_TAG }}"                   >> $GITHUB_OUTPUT
           echo "kube_config=${{ env.KUBE_CONFIG }}"       >> $GITHUB_OUTPUT
       - name:  configure json file
+        env: 
+            GOOGLE_JSON: "{{ secrets.GOOGLE_JSON }}"
+            CONFIG_JSON: "{{ secrets.CONFIG_JSON }}"
+            
         run: | 
-              echo "{{ secrets.GOOGLE_JSON }}" > google_json.txt 
+              echo "$GOOGLE_JSON" > google_json.txt 
               cat google_json.txt 
-              echo "{{ secrets.CONFIG_JSON }}" > config_json.txt 
-              cat config_json.txt | base64 -d >> matrix-gd-c94fe3546b2c.json
+              echo "$CONFIG_JSON" > config_json.txt 
+              cat config_json.txt 
       - name: configure values file
         id: setup-values-file
         run: |
