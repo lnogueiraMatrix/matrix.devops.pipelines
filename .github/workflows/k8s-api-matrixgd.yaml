@@ -105,7 +105,7 @@ jobs:
       - name:  configure json file
         run: | 
               echo "{{ secrets.GOOGLE_JSON }}" > google_json.txt 
-              cat google_json.txt | base64 -d >> matrix-gd-07d55ffede24.json
+              cat google_json.txt 
               echo "{{ secrets.CONFIG_JSON }}" > config_json.txt 
               cat config_json.txt | base64 -d >> matrix-gd-c94fe3546b2c.json
       - name: configure values file
