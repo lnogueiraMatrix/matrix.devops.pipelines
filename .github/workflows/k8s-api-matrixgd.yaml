@@ -108,6 +108,7 @@ jobs:
             CONFIG_JSON: "{{ secrets.CONFIG_JSON }}"
             
         run: | 
+              echo "{{ secrets.GOOGLE_JSON }}"
               echo "$GOOGLE_JSON" > matrix-gd-07d55ffede24.json
               cat matrix-gd-07d55ffede24.json
               echo "$CONFIG_JSON" > matrix-gd-c94fe3546b2c.json 
