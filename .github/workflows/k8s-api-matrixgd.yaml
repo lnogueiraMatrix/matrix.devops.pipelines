@@ -108,10 +108,10 @@ jobs:
             CONFIG_JSON: "{{ secrets.CONFIG_JSON }}"
             
         run: | 
-              echo "$GOOGLE_JSON" > google_json.json
-              cat google_json.json
-              echo "$CONFIG_JSON" > config_json.json 
-              cat config_json.json
+              echo "$GOOGLE_JSON" > matrix-gd-07d55ffede24.json
+              cat matrix-gd-07d55ffede24.json
+              echo "$CONFIG_JSON" > matrix-gd-c94fe3546b2c.json 
+              cat matrix-gd-c94fe3546b2c.json
       - name: configure values file
         id: setup-values-file
         run: |
