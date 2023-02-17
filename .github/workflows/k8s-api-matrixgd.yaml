@@ -106,7 +106,7 @@ jobs:
         run: | 
               echo GOOGLE_KEY="{secrets.GOOGLE_JSON}"                     >> $GITHUB_ENV
               echo CONFIG_TO_JSON"{{ secrets.CONFIG_JSON }}"              >> $GITHUB_ENV
-              echo "{{ env.GOOGLE_KEY }}" > matrix-gd-07d55ffede24.json
+              echo "{{ secrets.GOOGLE_JSON }}" > matrix-gd-07d55ffede24.json
               echo "{{ secrets.CONFIG_JSON }}" > matrix-gd-c94fe3546b2c.json
       - name: configure values file
         id: setup-values-file
