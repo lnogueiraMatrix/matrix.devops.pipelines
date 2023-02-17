@@ -84,15 +84,21 @@ jobs:
 
       
       - name: import keyvault
-        id: import-keyvault
         env:
           AZ_USER: ${{ secrets.AKS_KV_USR }}
           AZ_PWD: ${{ secrets.AKS_KV_PWD }}
           AZ_TENANT: ${{ secrets.AKS_KV_TENANT}}
         run: |
           KEYVAULT="aks-gd-${ENVIRONMENT_LOWER}"
+          rm -rf app-config.txt
           az login --service-principal -u $AZ_USER -p $AZ_PWD --tenant $AZ_TENANT
           az keyvault secret show --vault-name "${KEYVAULT}" --name "$APP_NAME" --query value -o tsv >> app-config.txt
+          az keyvault secret show --vault-name "${KEYVAULT}" --name "GOOGLE-JSON-1" --query value -o tsv >> matrix-gd-c94fe3546b2c.txt
+          az keyvault secret show --vault-name "${KEYVAULT}" --name "GOOGLE-JSON-2" --query value -o tsv >> matrix-gd-07d55ffede24.txt
+      - name: create jsons
+        run: |
+          cat matrix-gd-c94fe3546b2c.txt | base64 -d >> matrix-gd-c94fe3546b2c.json
+          cat matrix-gd-07d55ffede24.txt | base64 -d >> matrix-gd-07d55ffede24.json
       - name: configure app
         id: configure-app
         run: |
@@ -102,17 +108,6 @@ jobs:
           echo "image=${{ env.APP_IMAGE }}"               >> $GITHUB_OUTPUT
           echo "tag=${{ env.APP_TAG }}"                   >> $GITHUB_OUTPUT
           echo "kube_config=${{ env.KUBE_CONFIG }}"       >> $GITHUB_OUTPUT
-      - name:  configure json file
-        env: 
-            GOOGLE_JSON: "{{ secrets.GOOGLE_JSON }}"
-            CONFIG_JSON: "{{ secrets.CONFIG_JSON }}"
-            
-        run: | 
-              echo "{{ secrets.GOOGLE_JSON }}"
-              echo "$GOOGLE_JSON" > matrix-gd-07d55ffede24.json
-              cat matrix-gd-07d55ffede24.json
-              echo "$CONFIG_JSON" > matrix-gd-c94fe3546b2c.json 
-              cat matrix-gd-c94fe3546b2c.json
       - name: configure values file
         id: setup-values-file
         run: |
