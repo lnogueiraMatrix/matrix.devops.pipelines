@@ -60,5 +60,5 @@ jobs:
           token: ${{ secrets[env.CLONE_TOKEN] }}
       - name: install app
         run: |
-          helm uninstall ${{ steps.configure-app.outputs.name }} \
+          helm delete ${{ steps.configure-app.outputs.name }}
                      
