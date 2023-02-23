@@ -160,7 +160,6 @@ jobs:
           ls -lah ${{ env.OUT_DIR }}
       - name: docker build
         run: |
-          pwd \
           docker build \
             --build-arg ${{ inputs.tokenName }}=${{ secrets.PACKAGES_TOKEN }} \
             -t "${{ env.APP_IMAGE }}:${{ env.APP_TAG }}" \

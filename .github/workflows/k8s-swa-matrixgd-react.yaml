@@ -7,7 +7,7 @@ env:
   CHART_TYPE: webpage-gd
   PIPELINE_REVISION: v9
   PIPELINE_PATH: _PIPELINE_
-  DOCKERFILE_PATH: Dockerfiles/swa-react
+  DOCKERFILE_PATH: Dockerfiles/swa
   OUT_DIR: TMP_OUT
 on:
   workflow_call:
@@ -160,7 +160,6 @@ jobs:
           ls -lah ${{ env.OUT_DIR }}
       - name: docker build
         run: |
-          pwd
           docker build \
             --build-arg ${{ inputs.tokenName }}=${{ secrets.PACKAGES_TOKEN }} \
             -t "${{ env.APP_IMAGE }}:${{ env.APP_TAG }}" \
