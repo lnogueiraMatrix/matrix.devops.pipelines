@@ -5,9 +5,9 @@ env:
   CHART_REVISION: v9-matrixgd
   CHART_PATH: _CHARTS_
   CHART_TYPE: webpage-gd
-  PIPELINE_REVISION: v9
+  PIPELINE_REVISION: v9-matrixgd
   PIPELINE_PATH: _PIPELINE_
-  DOCKERFILE_PATH: Dockerfiles/swa
+  DOCKERFILE_PATH: Dockerfiles/swa-react
   OUT_DIR: TMP_OUT
 on:
   workflow_call:
