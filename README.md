@@ -4,5 +4,9 @@ Examples:
 Charts              - https://github.com/Matrix-Energia/matrix.devops.template.charts
 Java Application    - https://github.com/Matrix-Energia/matrix.devops.template.java.api
 
-# TODO:
-- [ ] Add Cron Template
+# Funcionalidades adicionais - pipeline v10:
+- [ ] APM centralizado dedicado
+- [ ] Ajuste de URL personalizada
+- [ ] Verificação da existência do keyvault no primeiro deploy/Criação do keyvault no primeiro deploy
+- [ ] Implementar HPA
+- [ ] Implementar Cronjob
