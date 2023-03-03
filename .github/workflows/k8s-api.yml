@@ -154,6 +154,7 @@ jobs:
           ls -l
           sed -i "s/ENV_TOKEN/${{ env.APM_TOKEN}}/g" charts/api/templates/apm-secret.yaml
           sed -i "s/APP_ENV/${ENVIRONMENT_LOWER}/g" charts/api/templates/apm-secret.yaml
+          cat charts/api/templates/apm-secret.yaml
       - name: install app
         run: |
           helm upgrade ${{ steps.configure-app.outputs.name }}-${{ steps.configure-app.outputs.revision }} \
