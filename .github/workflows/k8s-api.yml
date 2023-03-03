@@ -73,6 +73,7 @@ jobs:
           APP_NAME="${APP_NAME//./-}"
           ENVIRONMENT_LOWER="${ENVIRONMENT,,}"
           REGISTRY_NAME="${ENVIRONMENT_LOWER}akscr.azurecr.io"
+          APM_TOKEN="${secrets[env.APM_SECRET_TOKEN]}"
           echo REGISTRY_NAME="${REGISTRY_NAME}"                       >> $GITHUB_ENV
           echo REGISTRY_USR="MATRIX_${ENVIRONMENT}_ACR_USERNAME"      >> $GITHUB_ENV 
           echo REGISTRY_PWD="MATRIX_${ENVIRONMENT}_ACR_PASSWORD"      >> $GITHUB_ENV 
