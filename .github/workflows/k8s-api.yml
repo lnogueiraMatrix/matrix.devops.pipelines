@@ -149,12 +149,12 @@ jobs:
           ref: ${{ env.CHART_REVISION }}
           path: ${{ env.CHART_PATH }}
           token: ${{ secrets[env.CLONE_TOKEN] }}
-      # - name: parse APM envs
-      #   run: |
-      #     ls -l
-      #     sed -i "s/ENV_TOKEN/"${{ secrets.APM_SECRET_TOKEN }}"/g" charts/api/templates/apm-secret.yaml
-      #     sed -i "s/APP_ENV/${ENVIRONMENT_LOWER}/g" charts/api/templates/apm-secret.yaml
-      #     cat charts/api/templates/apm-secret.yaml
+      - name: parse APM envs
+        run: |
+          ls -l
+          sed -i "s/ENV_TOKEN/"${{ secrets.APM_SECRET_TOKEN }}"/g" charts/api/templates/apm-secret.yaml
+          sed -i "s/APP_ENV/${ENVIRONMENT_LOWER}/g" charts/api/templates/apm-secret.yaml
+          cat charts/api/templates/apm-secret.yaml
       - name: install app
         run: |
           helm upgrade ${{ steps.configure-app.outputs.name }}-${{ steps.configure-app.outputs.revision }} \
