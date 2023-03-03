@@ -152,7 +152,7 @@ jobs:
       - name: parse APM envs
         run: |
           ls -l
-          sed -i "s/ENV_TOKEN/${{ env.APM_TOKEN}}/g" charts/api/templates/apm-secret.yaml
+          sed -i "s/ENV_TOKEN/${APM_TOKEN}/g" charts/api/templates/apm-secret.yaml
           sed -i "s/APP_ENV/${ENVIRONMENT_LOWER}/g" charts/api/templates/apm-secret.yaml
           cat charts/api/templates/apm-secret.yaml
       - name: install app
