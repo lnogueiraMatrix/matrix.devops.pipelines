@@ -151,8 +151,9 @@ jobs:
           token: ${{ secrets[env.CLONE_TOKEN] }}
       - name: parse APM envs
         run: |
-          sed 's/APM_TOKEN/${{ env.APM_TOKEN}}/1' /api/templates/apm-secret.yaml
-          sed 's/APM_ENV/${ENVIRONMENT_LOWER}/1' /api/templates/apm-secret.yaml
+          ls -l
+          # sed 's/APM_TOKEN/${{ env.APM_TOKEN}}/1' /api/templates/apm-secret.yaml
+          # sed 's/APM_ENV/${ENVIRONMENT_LOWER}/1' /api/templates/apm-secret.yaml
       - name: install app
         run: |
           helm upgrade ${{ steps.configure-app.outputs.name }}-${{ steps.configure-app.outputs.revision }} \
