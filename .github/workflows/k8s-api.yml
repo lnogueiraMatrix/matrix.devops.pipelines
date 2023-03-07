@@ -129,18 +129,19 @@ jobs:
       - name: Wait for the quality gate result
         run: sleep 5
 
-      - uses: phwt/sonarqube-quality-gate-action@v1.3.2
-        id: quality-gate-check
-        with:
-          sonar-project-key: ${{ secrets.SONAR_PROJECT_KEY }}
-          sonar-host-url: ${{ secrets.SONAR_HOST_URL }}
-          sonar-token: ${{ secrets.SONAR_TOKEN }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: SonarQube Quality Gate check
+        id: sonarqube-quality-gate-check
+        uses: sonarsource/sonarqube-quality-gate-action@master
+        # Force to fail step after specific time.
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }} #OPTIONAL
 
-      - name: Output result
-        run: |
-          echo "${{ steps.quality-gate-check.outputs.project-status }}"
-          echo "${{ steps.quality-gate-check.outputs.quality-gate-result }}"
+    # Optionally you can use the output from the Quality Gate in another step.
+    # The possible outputs of the `quality-gate-status` variable are `PASSED`, `WARN` or `FAILED`.
+      - name: "Example show SonarQube Quality Gate Status value"
+        run: echo "The Quality Gate status is ${{ steps.sonarqube-quality-gate-check.outputs.quality-gate-status }}"    
 
       - name: docker login
         uses: Azure/docker-login@v1
