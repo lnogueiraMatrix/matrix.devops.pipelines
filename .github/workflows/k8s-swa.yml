@@ -160,6 +160,12 @@ jobs:
 
       - name: env injection
         run: sed -ie '1 asonar.login=${{secrets.SONAR_USER}} \n sonar.password=${{secrets.SONAR_PASSWORD}}' sonar-project.properties | cat sonar-project.properties
+          
+        #       Criando o Relatório dos Testes...
+      - name: create report
+        run: npm run test
+        #       Criando o Relatório dos Testes...
+        
 #       ConfigSonar > Pyhton, Node, JS...
       - uses: sonarsource/sonarqube-scan-action@master
         env:
