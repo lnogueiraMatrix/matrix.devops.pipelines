@@ -152,8 +152,6 @@ jobs:
           ref: ${{ env.CHART_REVISION }}
           path: ${{ env.CHART_PATH }}
           token: ${{ secrets[env.CLONE_TOKEN] }}
-      - name: parse env to APM
-        run: sed -i -r 's/APP_ENV/"${{ env.ENVIRONMENT_LOWER }}"/' ${{ env.CHART_PATH }}/${{ env.CHART_TYPE }}/apm-secret.yaml && cat matrix-app/templates/apm-secret.yaml
       - name: install app
         run: |
           helm upgrade ${{ steps.configure-app.outputs.name }}-${{ steps.configure-app.outputs.revision }} \
