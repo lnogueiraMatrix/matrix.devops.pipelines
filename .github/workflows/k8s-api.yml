@@ -91,7 +91,7 @@ jobs:
           KEYVAULT="aks-matrix-${ENVIRONMENT_LOWER}"
           az login --service-principal -u $AZ_USER -p $AZ_PWD --tenant $AZ_TENANT
           az keyvault secret show --vault-name "${KEYVAULT}" --name "$APP_NAME" --query value -o tsv >> app-config.txt
-           az keyvault secret show --vault-name "${KEYVAULT}" --name "nexus-settings" --query value -o tsv >> nexus-settings.txt
+          az keyvault secret show --vault-name "${KEYVAULT}" --name "nexus-settings" --query value -o tsv >> nexus-settings.txt
       - name: create settings.xml
         run: |
           cat nexus-settings.txt | base64 -d >> settings.xml
@@ -152,6 +152,8 @@ jobs:
           ref: ${{ env.CHART_REVISION }}
           path: ${{ env.CHART_PATH }}
           token: ${{ secrets[env.CLONE_TOKEN] }}
+      - name: parse env to APM
+        run: sed -i -r 's/ENV_TOKEN/"${{ env.ENVIRONMENT_LOWER }}"/' ${{ env.CHART_PATH }}/${{ env.CHART_TYPE }}/apm-secret.yaml
       - name: install app
         run: |
           helm upgrade ${{ steps.configure-app.outputs.name }}-${{ steps.configure-app.outputs.revision }} \
