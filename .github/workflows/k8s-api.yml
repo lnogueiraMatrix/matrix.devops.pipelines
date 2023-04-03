@@ -130,8 +130,8 @@ jobs:
           password: ${{ secrets[env.REGISTRY_PWD] }}
       - name: docker build
         run: |
-         sed -i 's/ENV_LOWER/$ENVIRONMENT_LOWER/' Dockerfile
-         sed -i 's/APP_NAME/$APP_NAME/' Dockerfile
+          sed -i "s/ENV_LOWER/${ENVIRONMENT_LOWER}/" Dockerfile
+          sed -i "s/APP_NAME/${APP_NAME}/" Dockerfile
           docker build \
             --build-arg ${{ inputs.tokenName }}=${{ secrets.PACKAGES_TOKEN }} \
             -t "${{ env.APP_IMAGE }}:${{ env.APP_TAG }}" \
