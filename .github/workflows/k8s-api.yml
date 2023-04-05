@@ -137,6 +137,10 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 11
+      - name: set up settings.xml
+        run: | 
+             rm /home/runner/.m2/settings.xml
+             cp settings.xml /home/runner/.m2/
       - name: Cache SonarQube packages
         uses: actions/cache@v1
         with:
