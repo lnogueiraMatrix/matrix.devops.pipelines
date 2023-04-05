@@ -96,6 +96,7 @@ jobs:
       - name: create settings.xml
         run: |
           cat nexus-settings.txt | base64 -d >> settings.xml
+          locate settings.xml
       - name: configure app
         id: configure-app
         run: |
