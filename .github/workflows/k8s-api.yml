@@ -96,8 +96,8 @@ jobs:
       - name: create settings.xml
         run: |
           cat nexus-settings.txt | base64 -d >> settings.xml
-          sudo apt install mlocate -y
-          locate settings.xml
+          sudo rm /usr/share/apache-maven-3.8.8/conf/settings.xml
+          cp settings.xml /usr/share/apache-maven-3.8.8/conf/ 
       - name: configure app
         id: configure-app
         run: |
