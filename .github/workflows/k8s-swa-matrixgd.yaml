@@ -1,11 +1,11 @@
-name: k8s SWA v9
+name: k8s SWA Matrix GD
 # SWA Uses a .env instead of .yaml encoded file
 env:
   HELM_VERSION: v3.9.2
-  CHART_REVISION: v9-matrixgd
+  CHART_REVISION: latest
   CHART_PATH: _CHARTS_
   CHART_TYPE: webpage-gd
-  PIPELINE_REVISION: v9
+  PIPELINE_REVISION: latest
   PIPELINE_PATH: _PIPELINE_
   DOCKERFILE_PATH: Dockerfiles/swa
   OUT_DIR: TMP_OUT
