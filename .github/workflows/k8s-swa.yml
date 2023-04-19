@@ -142,9 +142,10 @@ jobs:
       - name: create .env
         run: |
           rm -rf .env
+          echo "ELASTIC_APM_SERVICE_NAME=${{ env.APP_NAME }}-${{ env.APP_REVISION }}" > app-name.txt
           cat apm-config.txt | base64 -d >> apm.txt
           cat app-config.txt | base64 -d >> app.txt
-          sed -n 'p' apm.txt app.txt > .env 
+          sed -n 'p' apm.txt app-name.txt app.txt > .env 
       - name: create .npmrc
         run: |
           rm -rf .npmrc
