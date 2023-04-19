@@ -143,8 +143,8 @@ jobs:
         run: |
           rm -rf .env
           cat apm-config.txt | base64 -d >> apm.txt
-          cat app-config.txt | base64 -d >> .env
-          sed -ie "r  apm.txt" .env
+          cat app-config.txt | base64 -d >> app.txt
+          cat apm.txt app.txt > .env
       - name: create .npmrc
         run: |
           rm -rf .npmrc
