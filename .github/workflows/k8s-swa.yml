@@ -139,14 +139,12 @@ jobs:
           az login --service-principal -u $AZ_USER -p $AZ_PWD --tenant $AZ_TENANT
           az keyvault secret show --vault-name "${KEYVAULT}" --name "$APP_NAME" --query value -o tsv >> app-config.txt
           az keyvault secret show --vault-name "${KEYVAULT}" --name "elastic-config" --query value -o tsv >> apm-config.txt
-          cat apm-config.txt
       - name: create .env
         run: |
           rm -rf .env
           cat apm-config.txt | base64 -d >> apm.txt
           cat app-config.txt | base64 -d >> .env
           sed -ie "r  apm.txt" .env
-          cat .env
       - name: create .npmrc
         run: |
           rm -rf .npmrc
