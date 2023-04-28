@@ -1,40 +1,73 @@
 name: Java with Nexus Repository
-on: 
-  workflow_call:
+
+on: [ push ]
 
 jobs:
   build:
+
     runs-on: ubuntu-latest
+
     steps:
-    - name: Set up JDK 1.8
-      uses: actions/setup-java@v1
-      with:
-        java-version: 1.8
-    - name: snapshots
-      if: ( github.ref_name != 'releases')
-      run: |
-          echo "ENVIRONMENT=SNAPSHOT" >> $GITHUB_ENV
-          echo "APP_REVISION=${GITHUB_REF_NAME//\//-}" >> $GITHUB_ENV
-    - name: main
-      if: github.ref_name == 'main'
-      run: |
-          echo "ENVIRONMENT=RELEASES" >> $GITHUB_ENV
-          echo "APP_REVISION=RELEASES" >> $GITHUB_ENV
-    - name: set-vars
-      run: |
-          APP_NAME="${GITHUB_REPOSITORY/'Matrix-Energia/'/}"
-          APP_NAME="${APP_NAME/matrix./}"
-          ENVIRONMENT_LOWER="${ENVIRONMENT,,}"
-    - name: Build with Maven
-      run: mvn package --file pom.xml
-    - name: Nexus Repo Publish
-      uses: sonatype-nexus-community/nexus-repo-github-action@master
-      with:
-        serverUrl: ${{ secrets.NEXUS_HOST }}
-        username: admin
-        password: ${{ secrets.NEXUS_PASSWORD }}
-        format: maven2
-        repository: java-ms-lib
-        coordinates: groupId=com.matrix artifactId=java-ms-lib version=1.0.0
-        assets: extension=xml
-        filename: pom.xml
+      - uses: actions/checkout@v1
+      - name: Set up JDK 17
+        uses: actions/setup-java@v1
+        with:
+          java-version: 17
+
+      - name: adding new server to settings
+        run: |
+          echo "<server>      
+                <id>nexus</id>
+                <username>admin</username>
+                <password>${{ secrets.NEXUS_PASSWORD }}</password>   
+               </server>" > s-settings.xml
+      - name: creating new settings.xml
+        run: |
+          echo "<mirrors>
+           <mirror>
+              <id>nexus</id>
+              <mirrorOf>*</mirrorOf>
+              <url>http://nexus.matrixenergia.com:8081/repository/matrix-public/</url>
+          </mirror>
+          </mirrors>
+          <profiles>
+             <profile>
+              <id>nexus</id>
+              <repositories>
+                      <repository>
+                              <id>central</id>
+                              <url>http://central</url>
+                              <releases>
+                                      <enabled>true</enabled>
+                              </releases>
+                              <snapshots>
+                                      <enabled>true</enabled>
+                              </snapshots>
+                      </repository>
+              </repositories>
+              <pluginRepositories>
+                      <pluginRepository>
+                              <id>central</id>
+                              <url>http://central</url>
+                              <releases>
+                                      <enabled>true</enabled>
+                              </releases>
+                              <snapshots>
+                                      <enabled>true</enabled>
+                              </snapshots>
+                      </pluginRepository>
+              </pluginRepositories>
+          </profile>
+          </profiles>
+           <activeProfiles>
+            <activeProfile>nexus</activeProfile>
+           </activeProfiles>" > o-settings.xml
+      - name: replacing old-settings.xml
+        run: |
+          sudo sed -ie "9 r s-settings.xml" ~/.m2/settings.xml     
+          sudo sed -ie "15 r o-settings.xml" ~/.m2/settings.xml
+      - name: Downloading Dependencies from Maven Central
+        run: mvn clean install
+
+      - name: Nexus Repo Publish
+        run: mvn clean deploy -s ~/.m2/settings.xml
