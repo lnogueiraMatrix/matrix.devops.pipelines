@@ -2,10 +2,10 @@ name: k8s SWA v10
 # SWA Uses a .env instead of .yaml encoded file
 env:
   HELM_VERSION: v3.9.2
-  CHART_REVISION: v10-preview
+  CHART_REVISION: v10-customHosts
   CHART_PATH: _CHARTS_
   CHART_TYPE: webpage
-  PIPELINE_REVISION: v10-customHosts
+  PIPELINE_REVISION: v10-preview
   PIPELINE_PATH: _PIPELINE_
   DOCKERFILE_PATH: Dockerfiles/swa
   OUT_DIR: TMP_OUT
