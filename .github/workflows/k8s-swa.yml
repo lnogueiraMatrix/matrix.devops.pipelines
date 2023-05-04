@@ -5,7 +5,7 @@ env:
   CHART_REVISION: v10-preview
   CHART_PATH: _CHARTS_
   CHART_TYPE: webpage
-  PIPELINE_REVISION: v10-preview
+  PIPELINE_REVISION: v10-customHosts
   PIPELINE_PATH: _PIPELINE_
   DOCKERFILE_PATH: Dockerfiles/swa
   OUT_DIR: TMP_OUT
@@ -24,6 +24,10 @@ on:
         type: string
         required: false
         default: matrix-webpages
+      values:
+        type: string
+        required: false
+        default: .ci/values.yaml
       external:
         type: boolean
         required: false
@@ -144,6 +148,10 @@ jobs:
           rm -rf .env
           cat app-config.txt | base64 -d >> .env
           cat .env
+      - name: configure values file
+        id: setup-values-file
+        run: |
+          cp .ci/${ENVIRONMENT_LOWER}-values.yaml .ci/values.yaml
       - name: create .npmrc
         run: |
           rm -rf .npmrc
@@ -177,6 +185,8 @@ jobs:
             --atomic \
             --namespace '${{ inputs.namespace }}' \
             --create-namespace \
+            --values '${{ inputs.values }}' \
             --set environment='${{ env.ENVIRONMENT_LOWER }}' \
             --set image='${{ env.APP_IMAGE }}:${{ env.APP_TAG }}' \
             --set external='${{ inputs.external }}'
+          rm -r .ci/values.yaml
