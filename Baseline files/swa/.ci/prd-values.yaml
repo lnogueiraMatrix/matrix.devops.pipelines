@@ -1,5 +1,3 @@
-affinity:
-  enabled: false            # must be set to false unless it's the dev file (dev-values.yaml)
 customHost:
-  enabled: true
+  enabled: false
   url: devops.matrixenergia.com
