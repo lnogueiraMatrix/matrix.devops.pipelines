@@ -126,39 +126,45 @@ jobs:
           echo "result=${RESULT}" >> $GITHUB_OUTPUT
           rm -r app-config.txt
 
-#       - name: Sonarquebe - Python, Node, JS/TS...
-#         uses: sonarsource/sonarqube-scan-action@master
-#         env:
-#           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-#           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-          
-#       Sonarqube - Java
-      - name: Set up JDK 17
-        uses: actions/setup-java@v1
-        with:
-          java-version: 17
-      - name: set up settings.xml
-        run: | 
-             rm /home/runner/.m2/settings.xml
-             cp settings.xml /home/runner/.m2/
-      - name: Cache SonarQube packages
-        uses: actions/cache@v1
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-      - name: Cache Maven packages
-        uses: actions/cache@v1
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
-      - name: Sonarqube - Build and analyze ( Java )
+#       Sonarqube - Python, JS, Type...
+
+      - name: Sonarquebe - Python, Node, JS/TS...
+        uses: sonarsource/sonarqube-scan-action@master
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=${{ secrets.PROJECT_KEY }}
+          
+#       Sonarqube - Python, JS, Type...
+#       --------------------------------------------------
+#       Sonarqube - Java
+
+#      - name: Set up JDK 17
+#        uses: actions/setup-java@v1
+#        with:
+#          java-version: 17
+#      - name: set up settings.xml
+#        run: | 
+#             rm /home/runner/.m2/settings.xml
+#             cp settings.xml /home/runner/.m2/
+#      - name: Cache SonarQube packages
+#        uses: actions/cache@v1
+#        with:
+#          path: ~/.sonar/cache
+#          key: ${{ runner.os }}-sonar
+#          restore-keys: ${{ runner.os }}-sonar
+#      - name: Cache Maven packages
+#        uses: actions/cache@v1
+#        with:
+#          path: ~/.m2
+#          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+#          restore-keys: ${{ runner.os }}-m2
+#      - name: Sonarqube - Build and analyze ( Java )
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+#          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+#          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+#        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=${{ secrets.PROJECT_KEY }}
+
 #       Sonarqube - Java
 
       - name: Wait for the quality gate result
