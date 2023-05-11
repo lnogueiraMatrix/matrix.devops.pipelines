@@ -89,18 +89,25 @@ jobs:
           AZ_PWD: ${{ secrets.AKS_KV_PWD }}
           AZ_TENANT: ${{ secrets.AKS_KV_TENANT}}
         run: |
-          KEYVAULT="aks-gd-${ENVIRONMENT_LOWER}"
+          KEYVAULT="aks-gd-${ENVIRONMENT_LOWER}" aks-matrix-prd
           rm -rf app-config.txt
           az login --service-principal -u $AZ_USER -p $AZ_PWD --tenant $AZ_TENANT
           az keyvault secret show --vault-name "${KEYVAULT}" --name "$APP_NAME" --query value -o tsv >> app-config.txt
           az keyvault secret show --vault-name "${KEYVAULT}" --name "GOOGLE-JSON-1" --query value -o tsv >> matrix-gd-c94fe3546b2c.txt
           az keyvault secret show --vault-name "${KEYVAULT}" --name "GOOGLE-JSON-2" --query value -o tsv >> matrix-gd-07d55ffede24.txt
           az keyvault secret show --vault-name "${KEYVAULT}" --name "GOOGLE-JSON-3" --query value -o tsv >> matrix-gd-key.txt
+          az keyvault secret show --vault-name "aks-matrix-prd" --name "nexus-settings" --query value -o tsv >> nexus-settings.txt
+
       - name: create jsons
         run: |
           cat matrix-gd-c94fe3546b2c.txt | base64 -d >> matrix-gd-c94fe3546b2c.json
           cat matrix-gd-07d55ffede24.txt | base64 -d >> matrix-gd-07d55ffede24.json
           cat matrix-gd-key.txt | base64 -d >> matrix-gd-key.json
+          
+      - name: create settings.xml
+        run: |
+          cat nexus-settings.txt | base64 -d >> settings.xml    
+          
       - name: configure app
         id: configure-app
         run: |
