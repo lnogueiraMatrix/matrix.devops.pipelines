@@ -96,7 +96,7 @@ jobs:
           az keyvault secret show --vault-name "${KEYVAULT}" --name "GOOGLE-JSON-1" --query value -o tsv >> matrix-gd-c94fe3546b2c.txt
           az keyvault secret show --vault-name "${KEYVAULT}" --name "GOOGLE-JSON-2" --query value -o tsv >> matrix-gd-07d55ffede24.txt
           az keyvault secret show --vault-name "${KEYVAULT}" --name "GOOGLE-JSON-3" --query value -o tsv >> matrix-gd-key.txt
-          az keyvault secret show --vault-name "aks-matrix-prd" --name "nexus-settings" --query value -o tsv >> nexus-settings.txt
+          az keyvault secret show --vault-name aks-matrix-prd --name "nexus-settings" --query value -o tsv >> nexus-settings.txt
 
       - name: create jsons
         run: |
