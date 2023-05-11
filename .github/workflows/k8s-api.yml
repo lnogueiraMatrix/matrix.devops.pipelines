@@ -199,9 +199,9 @@ jobs:
         timeout-minutes: 5 # Maximum Time Out.
         # with:
         #   scanMetadataReportFile: target/sonar/report-task.txt
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }} # OPTIONAL
+        # env:
+        #   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        #   SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }} # OPTIONAL
 
 #       Verificação do Gate de Qualidade
 
