@@ -179,7 +179,8 @@ jobs:
         run: sleep 5
 
       - name: SonarQube Quality Gate check
-        id: sonarqube-quality-gate-check
+        if: steps.search.outputs.pom-found == 'true'
+        id: sonarqube-quality-gate-check-java
         uses: sonarsource/sonarqube-quality-gate-action@master
         # Force to fail step after specific time.
         timeout-minutes: 5
@@ -188,6 +189,16 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }} #OPTIONAL
+          
+      - name: SonarQube Quality Gate check
+        if: steps.search.outputs.pom-found == 'false'
+        id: sonarqube-quality-gate-check
+        uses: sonarsource/sonarqube-quality-gate-action@master
+        # Force to fail step after specific time.
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }} #OPTIONAL    
 
     # Optionally you can use the output from the Quality Gate in another step.
     # The possible outputs of the `quality-gate-status` variable are `PASSED`, `WARN` or `FAILED`.
