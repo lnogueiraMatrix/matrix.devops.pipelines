@@ -163,7 +163,34 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-          
+       #Sonarqube - Java
+      - name: Set up JDK 17
+        if: steps.search.outputs.pom-found == 'true'
+        uses: actions/setup-java@v1
+        with:
+          java-version: 17
+      - name: Cache SonarQube packages
+        if: steps.search.outputs.pom-found == 'true'
+        uses: actions/cache@v1
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+      - name: Cache Maven packages
+        if: steps.search.outputs.pom-found == 'true'
+        uses: actions/cache@v1
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+      - name: Sonarqube - Build and analyze ( Java )
+        if: steps.search.outputs.pom-found == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=${{ secrets.PROJECT_KEY 
+        
       - name: Wait for the quality gate result
         run: sleep 5
 
