@@ -148,11 +148,6 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 17
-      - name: set up settings.xml
-        if: steps.search.outputs.pom-found == 'true'
-        run: | 
-             rm /home/runner/.m2/settings.xml
-             cp settings.xml /home/runner/.m2/
       - name: Cache SonarQube packages
         if: steps.search.outputs.pom-found == 'true'
         uses: actions/cache@v1
@@ -199,11 +194,6 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }} #OPTIONAL    
-
-    # Optionally you can use the output from the Quality Gate in another step.
-    # The possible outputs of the `quality-gate-status` variable are `PASSED`, `WARN` or `FAILED`.
-      - name: "Example show SonarQube Quality Gate Status value"
-        run: echo "The Quality Gate status is ${{ steps.sonarqube-quality-gate-check.outputs.quality-gate-status }}"    
 
       - name: docker login
         uses: Azure/docker-login@v1
