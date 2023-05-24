@@ -95,13 +95,22 @@ jobs:
           az keyvault secret show --vault-name "${KEYVAULT}" --name "nexus-settings" --query value -o tsv >> nexus-settings.txt
           
       - name: recursive pom.xml search
-        id: search
+        id: search-java
         run: |
           if [[ -n $(find . -name "pom.xml" -print -quit) ]]; then
             echo "::set-output name=pom-found::true"
           else
             echo "::set-output name=pom-found::false"
-          fi    
+          fi 
+
+      - name: recursive pom.xml search
+        id: search-python
+        run: |
+          if [[ -n $(find . -name "requirements.txt" -print -quit) ]]; then
+            echo "::set-output name=req-found::true"
+          else
+            echo "::set-output name=req-found::false"
+          fi           
       - name: create settings.xml
         run: |
           cat nexus-settings.txt | base64 -d >> settings.xml
@@ -156,35 +165,47 @@ jobs:
         uses: Azure/k8s-set-context@v2
         with:
           kubeconfig: ${{ secrets[env.KUBE_CONFIG] }}
-          
+      #Sonarqube - Python    
+      - name: Setup Python
+        if: steps.search-python.outputs.req-found == 'true'
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install tox and any other packages
+        if: steps.search-python.outputs.req-found == 'true'
+        run: pip install tox
+      - name: Run tox
+        run: tox -e py
+        
       - name: Sonarquebe Scan
-        if: steps.search.outputs.pom-found == 'false'
+        if: steps.search-python.outputs.req-found == 'true'
         uses: sonarsource/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}      
        #Sonarqube - Java
       - name: Set up JDK 17
-        if: steps.search.outputs.pom-found == 'true'
+        if: steps.search-java.outputs.pom-found == 'true'
         uses: actions/setup-java@v1
         with:
           java-version: 17
       - name: Cache SonarQube packages
-        if: steps.search.outputs.pom-found == 'true'
+        if: steps.search-java.outputs.pom-found == 'true'
         uses: actions/cache@v1
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
       - name: Cache Maven packages
-        if: steps.search.outputs.pom-found == 'true'
+        if: steps.search-java.outputs.pom-found == 'true'
         uses: actions/cache@v1
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
       - name: Sonarqube - Build and analyze ( Java )
-        if: steps.search.outputs.pom-found == 'true'
+        if: steps.search-java.outputs.pom-found == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -195,7 +216,7 @@ jobs:
         run: sleep 5
 
       - name: SonarQube Quality Gate check
-        if: steps.search.outputs.pom-found == 'true'
+        if: steps.search-java.outputs.pom-found == 'true'
         id: sonarqube-quality-gate-check-java
         uses: sonarsource/sonarqube-quality-gate-action@master
         # Force to fail step after specific time.
@@ -207,7 +228,7 @@ jobs:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }} #OPTIONAL
           
       - name: SonarQube Quality Gate check
-        if: steps.search.outputs.pom-found == 'false'
+        if: steps.search-python.outputs.req-found == 'true'
         id: sonarqube-quality-gate-check
         uses: sonarsource/sonarqube-quality-gate-action@master
         # Force to fail step after specific time.
