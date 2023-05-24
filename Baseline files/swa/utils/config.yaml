@@ -1,0 +1,3 @@
+customHost:                      # Redis configuration:
+  enabled: true
+  url: dev-pirp-ui-feature.matrixenergia.com
