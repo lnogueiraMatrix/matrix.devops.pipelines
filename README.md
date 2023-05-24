@@ -6,7 +6,7 @@ Java Application    - https://github.com/Matrix-Energia/matrix.devops.template.j
 
 # Funcionalidades adicionais - pipeline v10:
 - [ x ] APM centralizado dedicado
-- [ ] Ajuste de URL personalizada
-- [ ] Verificação da existência do keyvault no primeiro deploy/Criação do keyvault no primeiro deploy
+- [ x ] Ajuste de URL personalizada
+- [ x ] Verificação da existência do keyvault no primeiro deploy/Criação do keyvault no primeiro deploy
 - [ x ] Implementar HPA
 - [ ] Implementar Cronjob
