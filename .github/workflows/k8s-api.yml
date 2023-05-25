@@ -103,14 +103,24 @@ jobs:
             echo "::set-output name=pom-found::false"
           fi 
 
-      - name: recursive pom.xml search
+      - name: recursive requeriments.txt search
         id: search-python
         run: |
           if [[ -n $(find . -name "requirements.txt" -print -quit) ]]; then
             echo "::set-output name=req-found::true"
           else
             echo "::set-output name=req-found::false"
-          fi           
+          fi
+      
+      - name: recursive package.json search
+        id: search-node
+        run: |
+          if [[ -n $(find . -name "package.json" -print -quit) ]]; then
+            echo "::set-output name=pak-found::true"
+          else
+            echo "::set-output name=pak-found::false"
+          fi
+
       - name: create settings.xml
         run: |
           cat nexus-settings.txt | base64 -d >> settings.xml
@@ -162,8 +172,23 @@ jobs:
         uses: sonarsource/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}      
-       #Sonarqube - Java
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      # Sonarqube - Java Script     
+      - name: Install dependencies
+        if: steps.search-node.outputs.pak-found == 'true'
+        run: yarn
+      
+      - name: Test and coverage
+        if: steps.search-node.outputs.pak-found == 'true'
+        run: yarn jest --coverage
+
+      - name: SonarQube Scan
+        if: steps.search-node.outputs.pak-found == 'true'
+        uses: SonarSource/sonarqube-scan-action@master
+        env:
+            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+            SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}    
+      #Sonarqube - Java
       - name: Set up JDK 17
         if: steps.search-java.outputs.pom-found == 'true'
         uses: actions/setup-java@v1
