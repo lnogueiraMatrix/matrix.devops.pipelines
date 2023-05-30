@@ -9,7 +9,7 @@ on:
  
 jobs:
   k8s-api:
-    uses: Matrix-Energia/matrix.devops.pipelines/.github/workflows/k8s-api.yml@v9
+    uses: Matrix-Energia/matrix.devops.pipelines/.github/workflows/k8s-api.yml@latest
     secrets: inherit
     with:
       namespace: matrix-apps  # Application Namespace ( Project/Product )

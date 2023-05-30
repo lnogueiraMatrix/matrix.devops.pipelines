@@ -4,7 +4,7 @@ env:
   PUBLISH_TOKEN: PACKAGES_TOKEN
   HELM_VERSION: v3.9.2
   CHART_REPOSITORY: 'Matrix-Energia/matrix.devops.template.charts.git'
-  CHART_REVISION: v10-preview
+  CHART_REVISION: v10
   CHART_PATH: charts
   CHART_TYPE: api
   YQ_VERSION: v4.2.0
@@ -92,6 +92,10 @@ jobs:
           KEYVAULT="aks-matrix-${ENVIRONMENT_LOWER}"
           az login --service-principal -u $AZ_USER -p $AZ_PWD --tenant $AZ_TENANT
           az keyvault secret show --vault-name "${KEYVAULT}" --name "$APP_NAME" --query value -o tsv >> app-config.txt
+          az keyvault secret show --vault-name "${KEYVAULT}" --name "nexus-settings" --query value -o tsv >> nexus-settings.txt
+      - name: create settings.xml
+        run: |
+          cat nexus-settings.txt | base64 -d >> settings.xml
       - name: configure app
         id: configure-app
         run: |
@@ -127,6 +131,8 @@ jobs:
           password: ${{ secrets[env.REGISTRY_PWD] }}
       - name: docker build
         run: |
+          sed -i "s/ENV_LOWER/${ENVIRONMENT_LOWER}/" Dockerfile
+          sed -i "s/APP_NAME/${APP_NAME}/" Dockerfile
           docker build \
             --build-arg ${{ inputs.tokenName }}=${{ secrets.PACKAGES_TOKEN }} \
             -t "${{ env.APP_IMAGE }}:${{ env.APP_TAG }}" \
