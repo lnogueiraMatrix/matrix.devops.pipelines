@@ -182,11 +182,11 @@ jobs:
       
       - name: Test and coverage
         if: steps.search-node.outputs.pak-found == 'true'
-        run: yarn jest --coverage
+        run: yarn run test
 
       - name: SonarQube Scan
         if: steps.search-node.outputs.pak-found == 'true'
-        uses: SonarSource/sonarqube-scan-action@master
+        uses: sonarsource/sonarqube-scan-action@master
         env:
             SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
             SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}    
