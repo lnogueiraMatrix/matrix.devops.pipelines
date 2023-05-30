@@ -6,3 +6,5 @@ Java Application    - https://github.com/Matrix-Energia/matrix.devops.template.j
 
 # TODO:
 - [ ] Add Cron Template
+- [ ] Separar pipelines para cada linguagem
+- [ ] Adicionar checagem de linguagem na pipeline principal
