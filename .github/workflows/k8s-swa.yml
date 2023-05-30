@@ -1,11 +1,11 @@
-name: k8s SWA Pipeline - Latest
+name: k8s SWA v10
 # SWA Uses a .env instead of .yaml encoded file
 env:
   HELM_VERSION: v3.9.2
-  CHART_REVISION: latest
+  CHART_REVISION: v10
   CHART_PATH: _CHARTS_
   CHART_TYPE: webpage
-  PIPELINE_REVISION: latest
+  PIPELINE_REVISION: v10
   PIPELINE_PATH: _PIPELINE_
   DOCKERFILE_PATH: Dockerfiles/swa
   OUT_DIR: TMP_OUT
@@ -24,6 +24,10 @@ on:
         type: string
         required: false
         default: matrix-webpages
+      values:
+        type: string
+        required: false
+        default: .ci/values.yaml
       external:
         type: boolean
         required: false
@@ -142,6 +146,12 @@ jobs:
       - name: create .env
         run: |
           rm -rf .env
+          cat app-config.txt | base64 -d >> .env
+          cat .env
+      - name: configure values file
+        id: setup-values-file
+        run: |
+          cp .ci/${ENVIRONMENT_LOWER}-values.yaml .ci/values.yaml
           echo "ELASTIC_APM_SERVICE_NAME=${{ env.APP_NAME }}-${{ env.APP_REVISION }}" > app-name.txt
           cat apm-config.txt | base64 -d >> apm.txt
           cat app-config.txt | base64 -d >> app.txt
@@ -179,6 +189,8 @@ jobs:
             --atomic \
             --namespace '${{ inputs.namespace }}' \
             --create-namespace \
+            --values '${{ inputs.values }}' \
             --set environment='${{ env.ENVIRONMENT_LOWER }}' \
             --set image='${{ env.APP_IMAGE }}:${{ env.APP_TAG }}' \
             --set external='${{ inputs.external }}'
+          rm -r .ci/values.yaml

@@ -1,10 +1,10 @@
-name: k8s Api Pipeline - Latest
+name: k8s Api v10
 env:
   CLONE_TOKEN: GIT_TOKEN_CUSTOM
   PUBLISH_TOKEN: PACKAGES_TOKEN
   HELM_VERSION: v3.9.2
   CHART_REPOSITORY: 'Matrix-Energia/matrix.devops.template.charts.git'
-  CHART_REVISION: latest
+  CHART_REVISION: v10
   CHART_PATH: charts
   CHART_TYPE: api
   YQ_VERSION: v4.2.0
@@ -73,6 +73,7 @@ jobs:
           APP_NAME="${APP_NAME//./-}"
           ENVIRONMENT_LOWER="${ENVIRONMENT,,}"
           REGISTRY_NAME="${ENVIRONMENT_LOWER}akscr.azurecr.io"
+          APM_TOKEN="${{ secrets[env.APM_SECRET_TOKEN] }}"
           echo REGISTRY_NAME="${REGISTRY_NAME}"                       >> $GITHUB_ENV
           echo REGISTRY_USR="MATRIX_${ENVIRONMENT}_ACR_USERNAME"      >> $GITHUB_ENV 
           echo REGISTRY_PWD="MATRIX_${ENVIRONMENT}_ACR_PASSWORD"      >> $GITHUB_ENV 
@@ -154,6 +155,12 @@ jobs:
           ref: ${{ env.CHART_REVISION }}
           path: ${{ env.CHART_PATH }}
           token: ${{ secrets[env.CLONE_TOKEN] }}
+      - name: parse APM envs
+        run: |
+          ls -l
+          sed -i "s/ENV_TOKEN/"${{ secrets.APM_SECRET_TOKEN }}"/g" charts/api/templates/apm-secret.yaml
+          sed -i "s/APP_ENV/${ENVIRONMENT_LOWER}/g" charts/api/templates/apm-secret.yaml
+          cat charts/api/templates/apm-secret.yaml
       - name: install app
         run: |
           helm upgrade ${{ steps.configure-app.outputs.name }}-${{ steps.configure-app.outputs.revision }} \
