@@ -164,7 +164,9 @@ jobs:
       - name: Install tox and any other packages
         if: steps.search-python.outputs.req-found == 'true'
         run: pip install tox
+
       - name: Run tox
+        if: steps.search-python.outputs.req-found == 'true'
         run: tox -e py
 
       - name: Sonarquebe Scan
