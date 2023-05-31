@@ -166,7 +166,9 @@ jobs:
       - name: Install tox and any other packages
         if: steps.search-python.outputs.req-found == 'true'
         run: pip install tox
+
       - name: Run tox
+        if: steps.search-python.outputs.req-found == 'true'
         run: tox -e py
 
       - name: Sonarquebe Scan
@@ -178,15 +180,15 @@ jobs:
       # Sonarqube - Java Script     
       - name: Install dependencies
         if: steps.search-node.outputs.pak-found == 'true'
-        run: yarn
+        run: npm i
       
       - name: Test and coverage
         if: steps.search-node.outputs.pak-found == 'true'
-        run: yarn jest --coverage
+        run: npm run test
 
       - name: SonarQube Scan
         if: steps.search-node.outputs.pak-found == 'true'
-        uses: SonarSource/sonarqube-scan-action@master
+        uses: sonarsource/sonarqube-scan-action@master
         env:
             SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
             SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}    
