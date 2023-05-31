@@ -149,8 +149,9 @@ jobs:
           D_ENCODING='UTF-8//TRANSLIT'
           iconv -f ${S_ENCODING^^} -t ${D_ENCODING} .content -o .content
           echo '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' > .expression
+          export $(yq e '.content | to_entries | map(.key + "=" + .value) | join(" ")' input)
           yq e --no-colors --no-doc --from-file .expression .content > .result
-          cat .result
+          cat .content
           cat .content >> .env
           source .env
           RESULT="$( cat .result | base64 -w0 )"
