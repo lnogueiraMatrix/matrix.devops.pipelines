@@ -151,7 +151,6 @@ jobs:
           echo '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' > .expression
           export $(yq r .content -j | jq -r 'to_entries | .[] | "export \(.key)=\(.value)"')
           yq e --no-colors --no-doc --from-file .expression .content > .result
-          cat .content
           cat .content >> .env
           source .env
           RESULT="$( cat .result | base64 -w0 )"
