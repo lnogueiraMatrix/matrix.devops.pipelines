@@ -82,6 +82,7 @@ jobs:
           echo APP_IMAGE="${REGISTRY_NAME}/${GITHUB_REPOSITORY,,}"    >> $GITHUB_ENV
           echo APP_TAG="${GITHUB_SHA:0:8}-${GITHUB_RUN_NUMBER}"       >> $GITHUB_ENV
           echo KUBE_CONFIG="MATRIX_${ENVIRONMENT}_AKS_KUBE_CONFIG"    >> $GITHUB_ENV
+
       - name: import keyvault
         id: import-keyvault
         env:
@@ -111,7 +112,7 @@ jobs:
           else
             echo "::set-output name=req-found::false"
           fi
-      
+
       - name: recursive package.json search
         id: search-node
         run: |
@@ -149,12 +150,16 @@ jobs:
           D_ENCODING='UTF-8//TRANSLIT'
           iconv -f ${S_ENCODING^^} -t ${D_ENCODING} .content -o .content
           echo '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' > .expression
+<<<<<<< HEAD
           export $(yq r app-config.txt -j | jq -r 'to_entries | .[] | "export \(.key)=\(.value)"')
+=======
+          yq e --no-colors --no-doc --from-file .expression .content > .result
+>>>>>>> 3b0df6109fb12906ea6afaa3ce675224bc7e55bb
           RESULT="$( cat .result | base64 -w0 )"
           echo "result=${RESULT}" >> $GITHUB_OUTPUT
           rm -r app-config.txt
-      
-      #Sonarqube - Python    
+
+      # Sonarqube - Python    
       - name: Setup Python
         if: steps.search-python.outputs.req-found == 'true'
         uses: actions/setup-python@v2
@@ -175,10 +180,11 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
       # Sonarqube - Java Script     
       - name: Install dependencies
         if: steps.search-node.outputs.pak-found == 'true'
-        run: npm i
+        run: npm install
       
       - name: Test and coverage
         if: steps.search-node.outputs.pak-found == 'true'
@@ -190,7 +196,17 @@ jobs:
         env:
             SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
             SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}    
-      #Sonarqube - Java
+
+      - name: SonarQube Quality Gate check
+        if: ( steps.search-python.outputs.req-found == 'true' && steps.search-python.outputs.pak-found == 'true' )
+        id: sonarqube-quality-gate-check
+        uses: sonarsource/sonarqube-quality-gate-action@master
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+      # Sonarqube - Java
       - name: Set up JDK 17
         if: steps.search-java.outputs.pom-found == 'true'
         uses: actions/setup-java@v1
@@ -213,7 +229,7 @@ jobs:
       - name: Sonarqube - Build and analyze ( Java )
         if: steps.search-java.outputs.pom-found == 'true'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=${{ secrets.PROJECT_KEY }}
@@ -225,20 +241,9 @@ jobs:
         if: steps.search-java.outputs.pom-found == 'true'
         id: sonarqube-quality-gate-check-java
         uses: sonarsource/sonarqube-quality-gate-action@master
-        # Force to fail step after specific time.
         timeout-minutes: 5
         with:
           scanMetadataReportFile: target/sonar/report-task.txt
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }} #OPTIONAL
-          
-      - name: SonarQube Quality Gate check
-        if: steps.search-python.outputs.req-found == 'true'
-        id: sonarqube-quality-gate-check
-        uses: sonarsource/sonarqube-quality-gate-action@master
-        # Force to fail step after specific time.
-        timeout-minutes: 5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
@@ -249,7 +254,6 @@ jobs:
           login-server: ${{ env.REGISTRY_NAME }}
           username: ${{ secrets[env.REGISTRY_USR] }}
           password: ${{ secrets[env.REGISTRY_PWD] }}
-          
       - name: docker build
         run: |
           sed -i "s/ENV_LOWER/${ENVIRONMENT_LOWER}/" Dockerfile
