@@ -108,14 +108,14 @@ jobs:
           echo "DEFAULT_URL={APP_NAME}.matrixenergia.com" >> $GITHUB_ENV
           python .ci/utils/update_dns.py
 
-          - name: cloudflare dns registrarion
-          if: github.ref_name == 'main'
-          env:
+      - name: cloudflare dns registrarion
+        if: github.ref_name == 'main'
+        env:
             API_TOKEN: ${{ secrets.CF_API_TOKEN }}
             BEARER_AUTH: ${{ secrets.BEARER_AUTH }}
             DNS_ZONE : ${{ secrets.DNS_ZONE  }}  
             EMAIL: ${{ secrets.EMAIL }}
-          run: |
+        run: |
             echo "DEFAULT_URL={ENVIRONMENT_LOWER}-{APP_NAME}.matrixenergia.com" >> $GITHUB_ENV
             python .ci/utils/update_dns.py    
 # Docker setup
