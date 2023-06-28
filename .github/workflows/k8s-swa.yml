@@ -101,11 +101,22 @@ jobs:
         env:
           API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           BEARER_AUTH: ${{ secrets.BEARER_AUTH }}
-          DNS_ZONE : ${{ secrets.DNS_ZONE  }}
-          DEFAULT_URL: 
+          DNS_ZONE : ${{ secrets.DNS_ZONE  }}  
           EMAIL: ${{ secrets.EMAIL }}
-          IP: 
-        run: python script.py
+        run: |
+          echo "DEFAULT_URL={APP_NAME}.matrixenergia.com" >> $GITHUB_ENV
+          python Baseline\ files/swa/utils/update_dns.py
+
+          - name: cloudflare dns registrarion
+          if: github.ref_name == 'main'
+          env:
+            API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+            BEARER_AUTH: ${{ secrets.BEARER_AUTH }}
+            DNS_ZONE : ${{ secrets.DNS_ZONE  }}  
+            EMAIL: ${{ secrets.EMAIL }}
+          run: |
+            echo "DEFAULT_URL={ENVIRONMENT_LOWER}-{APP_NAME}.matrixenergia.com" >> $GITHUB_ENV
+            python Baseline\ files/swa/utils/update_dns.py    
 # Docker setup
       - name: clone dockerfile
         uses: actions/checkout@v3
