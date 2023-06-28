@@ -3,13 +3,13 @@ from os import getenv
 import yaml
 import requests
 
-DEFAULT_URL  = getenv.DEFAULT_URL
-API_TOKEN    = getenv.API_TOKEN
+DEFAULT_URL  = getenv.DEFAULT_URL #ainda feito
+API_TOKEN    = getenv.CF_API_TOKEN
 BEARER_AUTH  = getenv.BEARER_AUTH
 DNS_ZONE     = getenv.DNS_ZONE
 EMAIL        = getenv.EMAIL
-IP           = getenv.IP
-ENVIRONMENT  = getenv.ENVIRONMENT
+IP           = getenv.CLUSTER_IP
+ENVIRONMENT  = getenv.ENVIRONMENT_LOWER
 
 with open(f'../.ci/{ENVIRONMENT}-values.yaml','r') as f:
     config = yaml.safe_load(f)
