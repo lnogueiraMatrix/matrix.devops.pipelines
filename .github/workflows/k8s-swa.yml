@@ -96,7 +96,7 @@ jobs:
         run: |
             pwd && ls -lah
             python -m pip install --upgrade pip
-            pip install -r ../Baseline\ files/swa/utils/requirements.txt
+            pip install -r .ci/utils/requirements.txt
       
       - name: cloudflare dns registrarion
         env:
@@ -106,7 +106,7 @@ jobs:
           EMAIL: ${{ secrets.EMAIL }}
         run: |
           echo "DEFAULT_URL={APP_NAME}.matrixenergia.com" >> $GITHUB_ENV
-          python Baseline\ files/swa/utils/update_dns.py
+          python .ci/utils/update_dns.py
 
           - name: cloudflare dns registrarion
           if: github.ref_name == 'main'
@@ -117,7 +117,7 @@ jobs:
             EMAIL: ${{ secrets.EMAIL }}
           run: |
             echo "DEFAULT_URL={ENVIRONMENT_LOWER}-{APP_NAME}.matrixenergia.com" >> $GITHUB_ENV
-            python Baseline\ files/swa/utils/update_dns.py    
+            python .ci/utils/update_dns.py    
 # Docker setup
       - name: clone dockerfile
         uses: actions/checkout@v3
