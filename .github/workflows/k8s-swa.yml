@@ -99,6 +99,7 @@ jobs:
             pip install -r .ci/utils/requirments.txt
       
       - name: cloudflare dns registrarion
+        if: github.ref_name == 'main'
         env:
           API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           BEARER_AUTH: ${{ secrets.BEARER_AUTH }}
@@ -109,7 +110,6 @@ jobs:
           python .ci/utils/update_dns.py
 
       - name: cloudflare dns registrarion
-        if: github.ref_name == 'main'
         env:
             API_TOKEN: ${{ secrets.CF_API_TOKEN }}
             BEARER_AUTH: ${{ secrets.BEARER_AUTH }}
