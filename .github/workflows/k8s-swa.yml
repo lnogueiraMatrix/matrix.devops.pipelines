@@ -116,7 +116,7 @@ jobs:
             DNS_ZONE : ${{ secrets.DNS_ZONE  }}  
             EMAIL: ${{ secrets.EMAIL }}
         run: |
-            echo "DEFAULT_URL=${APP_NAME}.matrixenergia.com" >> $GITHUB_ENV
+            echo "DEFAULT_URL=${APP_REVISION}-${APP_NAME}.matrixenergia.com" >> $GITHUB_ENV
             python .ci/utils/update_dns.py    
 # Docker setup
       - name: clone dockerfile
