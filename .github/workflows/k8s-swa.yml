@@ -105,6 +105,7 @@ jobs:
           BEARER_AUTH: ${{ secrets.BEARER_AUTH }}
           DNS_ZONE : ${{ secrets.DNS_ZONE  }}  
           EMAIL: ${{ secrets.EMAIL }}
+          ENVIRONMENT_LOWER: ${{ env.ENVIRONMENT_LOWER }}
         run: |
           echo "DEFAULT_URL=${APP_NAME}.matrixenergia.com" >> $GITHUB_ENV
           python .ci/utils/update_dns.py
