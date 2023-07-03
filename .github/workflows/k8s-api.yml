@@ -150,11 +150,8 @@ jobs:
           D_ENCODING='UTF-8//TRANSLIT'
           iconv -f ${S_ENCODING^^} -t ${D_ENCODING} .content -o .content
           echo '.. | select(. == "*") | {(path | . as $x | (.[] | select((. | tag) == "!!int") |= (["[", ., "]"] | join(""))) | $x | join(".") | sub(".\[", "[")): .} ' > .expression
-<<<<<<< HEAD
           export $(yq r app-config.txt -j | jq -r 'to_entries | .[] | "export \(.key)=\(.value)"')
-=======
           yq e --no-colors --no-doc --from-file .expression .content > .result
->>>>>>> 3b0df6109fb12906ea6afaa3ce675224bc7e55bb
           RESULT="$( cat .result | base64 -w0 )"
           echo "result=${RESULT}" >> $GITHUB_OUTPUT
           rm -r app-config.txt
