@@ -49,26 +49,31 @@ jobs:
       - name: dev
         if: ( github.ref_name != 'main' && github.ref_name != 'k8s-prd' && github.ref_name != 'hml' && github.ref_name != 'k8s-hml')
         run: |
+          echo "CLUSTER_IP=${{ secrets.DEV_CLUSTER_IP }}" >> $GITHUB_ENV
           echo "ENVIRONMENT=DEV" >> $GITHUB_ENV
           echo "APP_REVISION=${GITHUB_REF_NAME//\//-}" >> $GITHUB_ENV
       - name: hml
         if: github.ref_name == 'hml'
         run: |
+          echo "CLUSTER_IP=${{ secrets.HML_CLUSTER_IP }}" >> $GITHUB_ENV
           echo "ENVIRONMENT=HML" >> $GITHUB_ENV
           echo "APP_REVISION=hml" >> $GITHUB_ENV
       - name: hml-k8s
         if: github.ref_name == 'k8s-hml'
         run: |
+          echo "CLUSTER_IP=${{ secrets.HML_CLUSTER_IP }}" >> $GITHUB_ENV 
           echo "ENVIRONMENT=HML" >> $GITHUB_ENV
           echo "APP_REVISION=hml" >> $GITHUB_ENV
       - name: prd
         if: github.ref_name == 'main'
         run: |
+          echo "CLUSTER_IP=${{ secrets.PRD_CLUSTER_IP }}" >> $GITHUB_ENV 
           echo "ENVIRONMENT=PRD" >> $GITHUB_ENV
           echo "APP_REVISION=prd" >> $GITHUB_ENV
       - name: prd-k8s
         if: github.ref_name == 'k8s-prd'
         run: |
+          echo "CLUSTER_IP=${{ secrets.PRD_CLUSTER_IP }}" >> $GITHUB_ENV 
           echo "ENVIRONMENT=PRD" >> $GITHUB_ENV
           echo "APP_REVISION=prd" >> $GITHUB_ENV
       - name: configure variables
@@ -86,6 +91,32 @@ jobs:
           echo "APP_IMAGE=${REGISTRY_NAME}/${GITHUB_REPOSITORY,,}"  >> $GITHUB_ENV
           echo APP_TAG="${GITHUB_SHA:0:8}-${GITHUB_RUN_NUMBER}"     >> $GITHUB_ENV
           echo "KUBE_CONFIG=MATRIX_${ENVIRONMENT}_AKS_KUBE_CONFIG"  >> $GITHUB_ENV
+       
+      - name: Install dependecies
+        run: |
+            python -m pip install --upgrade pip
+            pip install -r Baseline\ files/swa/utils/requirements.txt
+      
+      - name: cloudflare dns registrarion
+        env:
+          API_TOKEN: ${{ secrets.CF_GD_API_TOKEN }}
+          BEARER_AUTH: ${{ secrets.GD_BEARER_AUTH }}
+          DNS_ZONE : ${{ secrets.GD_DNS_ZONE  }}  
+          EMAIL: ${{ secrets.EMAIL }}
+        run: |
+          echo "DEFAULT_URL={APP_NAME}.matrixgd.com" >> $GITHUB_ENV
+          python Baseline\ files/swa/utils/update_dns.py
+
+          - name: cloudflare dns registrarion
+          if: github.ref_name == 'main'
+          env:
+            API_TOKEN: ${{ secrets.CF_GD_API_TOKEN }}
+            BEARER_AUTH: ${{ secrets.GD_BEARER_AUTH }}
+            DNS_ZONE : ${{ secrets.GD_DNS_ZONE  }}  
+            EMAIL: ${{ secrets.EMAIL }}
+          run: |
+            echo "DEFAULT_URL={ENVIRONMENT_LOWER}-{APP_NAME}.matrixgd.com" >> $GITHUB_ENV
+            python Baseline\ files/swa/utils/update_dns.py    
 # Docker setup
       - name: clone dockerfile
         uses: actions/checkout@v3

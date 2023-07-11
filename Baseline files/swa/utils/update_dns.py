@@ -1,9 +1,8 @@
-import http.client
 from os import getenv
 import yaml
 import requests
 
-DEFAULT_URL  = getenv.DEFAULT_URL #ainda feito
+DEFAULT_URL  = getenv.DEFAULT_URL
 API_TOKEN    = getenv.CF_API_TOKEN
 BEARER_AUTH  = getenv.BEARER_AUTH
 DNS_ZONE     = getenv.DNS_ZONE
@@ -60,7 +59,6 @@ def check_dns(url):
       pass
    return exist
 
-#print(check_dns())
 if __name__ == '__main__':
   if check_dns(url) == False:
    create_dns(url)
