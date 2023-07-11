@@ -81,7 +81,7 @@ jobs:
           APP_NAME=${GITHUB_REPOSITORY/'Matrix-Energia/'/}
           APP_NAME=${APP_NAME/matrix./}
           APP_NAME=${APP_NAME//./-}
-          ENVIRONMENT_LOWER="${o,,}"
+          ENVIRONMENT_LOWER="${ENVIRONMENT,,}"
           REGISTRY_NAME=${ENVIRONMENT_LOWER}akscr.azurecr.io
           echo "REGISTRY_NAME=${REGISTRY_NAME}"                     >> $GITHUB_ENV
           echo "REGISTRY_USR=MATRIX_${ENVIRONMENT}_ACR_USERNAME"    >> $GITHUB_ENV
@@ -94,29 +94,30 @@ jobs:
 
       - name: Install dependecies
         run: |
+            pwd && ls -lah
             python -m pip install --upgrade pip
-            pip install -r Baseline\ files/swa/utils/requirements.txt
+            pip install -r .ci/utils/requirments.txt
       
       - name: cloudflare dns registrarion
+        if: github.ref_name == 'main'
         env:
-          API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           BEARER_AUTH: ${{ secrets.BEARER_AUTH }}
           DNS_ZONE : ${{ secrets.DNS_ZONE  }}  
           EMAIL: ${{ secrets.EMAIL }}
         run: |
-          echo "DEFAULT_URL={APP_NAME}.matrixenergia.com" >> $GITHUB_ENV
-          python Baseline\ files/swa/utils/update_dns.py
+          echo "DEFAULT_URL=${APP_NAME}.matrixenergia.com" >> $GITHUB_ENV
+          python .ci/utils/update_dns.py
 
-          - name: cloudflare dns registrarion
-          if: github.ref_name == 'main'
-          env:
-            API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+      - name: cloudflare dns registrarion
+        env:
+            CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
             BEARER_AUTH: ${{ secrets.BEARER_AUTH }}
             DNS_ZONE : ${{ secrets.DNS_ZONE  }}  
             EMAIL: ${{ secrets.EMAIL }}
-          run: |
-            echo "DEFAULT_URL={ENVIRONMENT_LOWER}-{APP_NAME}.matrixenergia.com" >> $GITHUB_ENV
-            python Baseline\ files/swa/utils/update_dns.py    
+        run: |
+            echo "DEFAULT_URL=${APP_REVISION}-${APP_NAME}.matrixenergia.com" >> $GITHUB_ENV
+            python .ci/utils/update_dns.py    
 # Docker setup
       - name: clone dockerfile
         uses: actions/checkout@v3
