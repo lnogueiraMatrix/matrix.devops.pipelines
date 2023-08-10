@@ -92,6 +92,14 @@ jobs:
           echo APP_TAG="${GITHUB_SHA:0:8}-${GITHUB_RUN_NUMBER}"     >> $GITHUB_ENV
           echo "KUBE_CONFIG=MATRIX_${ENVIRONMENT}_AKS_KUBE_CONFIG"  >> $GITHUB_ENV
 
+      - name: clone utils
+        uses: actions/checkout@v3
+        with:
+          repository: 'Matrix-Energia/matrix.devops.pipelines.git'
+          ref: ${{ env.PIPELINE_REVISION }}
+          path: ${{ env.PIPELINE_PATH }}
+          token: ${{ secrets.GIT_TOKEN_CUSTOM }}  
+
       - name: Set up environment
         run: |
           echo "DEFAULT_URL=${APP_NAME}.matrixenergia.com" >> $GITHUB_ENV
@@ -100,14 +108,7 @@ jobs:
         run: |
           mv -f ${{ env.PIPELINE_PATH }}/utils/update_dns.sh ./
           bash update_dns.sh
-# Docker setup
-      - name: clone dockerfile
-        uses: actions/checkout@v3
-        with:
-          repository: 'Matrix-Energia/matrix.devops.pipelines.git'
-          ref: ${{ env.PIPELINE_REVISION }}
-          path: ${{ env.PIPELINE_PATH }}
-          token: ${{ secrets.GIT_TOKEN_CUSTOM }}      
+# Docker setup    
       - name: copy dockerfile
         run: mv -f ${{ env.PIPELINE_PATH }}/${{ env.DOCKERFILE_PATH }}/* ./
       - name: Check files
