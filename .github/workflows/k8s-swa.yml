@@ -92,12 +92,13 @@ jobs:
           echo APP_TAG="${GITHUB_SHA:0:8}-${GITHUB_RUN_NUMBER}"     >> $GITHUB_ENV
           echo "KUBE_CONFIG=MATRIX_${ENVIRONMENT}_AKS_KUBE_CONFIG"  >> $GITHUB_ENV
      
-      - name: Install yq
+      - name: Install yq and jq
         run: |
-            sudo add-apt-repository ppa:rmescandon/yq
+            sudo add-apt-repository ppa:rmescandon/yq -y
             sudo apt-get update -q
-            sudo apt-get install -y yq  
-              
+            sudo apt-get install -y yq 
+            sudo apt-get install -y jq 
+
       - name: clone utils
         uses: actions/checkout@v3
         with:
