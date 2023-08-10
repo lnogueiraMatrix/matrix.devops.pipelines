@@ -5,7 +5,7 @@ env:
   CHART_REVISION: latest
   CHART_PATH: _CHARTS_
   CHART_TYPE: webpage
-  PIPELINE_REVISION: latest
+  PIPELINE_REVISION: v11-auto-dns
   PIPELINE_PATH: _PIPELINE_
   DOCKERFILE_PATH: Dockerfiles/swa
   OUT_DIR: TMP_OUT
@@ -99,7 +99,7 @@ jobs:
           ref: ${{ env.PIPELINE_REVISION }}
           path: ${{ env.PIPELINE_PATH }}
           token: ${{ secrets.GIT_TOKEN_CUSTOM }}  
-
+          
       - name: Set up environment
         run: |
           echo "DEFAULT_URL=${APP_NAME}.matrixenergia.com" >> $GITHUB_ENV
