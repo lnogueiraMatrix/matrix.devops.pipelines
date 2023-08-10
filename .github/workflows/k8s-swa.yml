@@ -98,7 +98,7 @@ jobs:
 
       - name: Run Shell Script
         run: |
-          bash Baseline\ files/swa/utils/update_dns.sh
+          bash ${{ env.PIPELINE_PATH }}Baseline\ files/swa/utils/update_dns.sh
 # Docker setup
       - name: clone dockerfile
         uses: actions/checkout@v3
