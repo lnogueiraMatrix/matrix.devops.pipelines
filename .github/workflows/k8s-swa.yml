@@ -92,32 +92,13 @@ jobs:
           echo APP_TAG="${GITHUB_SHA:0:8}-${GITHUB_RUN_NUMBER}"     >> $GITHUB_ENV
           echo "KUBE_CONFIG=MATRIX_${ENVIRONMENT}_AKS_KUBE_CONFIG"  >> $GITHUB_ENV
 
-      - name: Install dependecies
-        run: |
-            pwd && ls -lah
-            python -m pip install --upgrade pip
-            pip install -r .ci/utils/requirments.txt
-      
-      - name: cloudflare dns registrarion
-        if: github.ref_name == 'main'
-        env:
-          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          BEARER_AUTH: ${{ secrets.BEARER_AUTH }}
-          DNS_ZONE : ${{ secrets.DNS_ZONE  }}  
-          EMAIL: ${{ secrets.EMAIL }}
+      - name: Set up environment
         run: |
           echo "DEFAULT_URL=${APP_NAME}.matrixenergia.com" >> $GITHUB_ENV
-          python .ci/utils/update_dns.py
 
-      - name: cloudflare dns registrarion
-        env:
-            CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-            BEARER_AUTH: ${{ secrets.BEARER_AUTH }}
-            DNS_ZONE : ${{ secrets.DNS_ZONE  }}  
-            EMAIL: ${{ secrets.EMAIL }}
+      - name: Run Shell Script
         run: |
-            echo "DEFAULT_URL=${APP_REVISION}-${APP_NAME}.matrixenergia.com" >> $GITHUB_ENV
-            python .ci/utils/update_dns.py    
+          bash Baseline\ files/swa/utils/update_dns.sh
 # Docker setup
       - name: clone dockerfile
         uses: actions/checkout@v3
