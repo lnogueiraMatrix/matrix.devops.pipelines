@@ -1,3 +1,5 @@
+environment=$(echo "$ENVIRONMENT" | tr '[:upper:]' '[:lower:]')
+
 config_file="../.ci/${ENVIRONMENT}-values.yaml"
 config=$(yaml2json < "$config_file")
 
