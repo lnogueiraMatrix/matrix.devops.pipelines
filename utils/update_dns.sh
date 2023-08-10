@@ -1,6 +1,6 @@
 environment=$(echo "$ENVIRONMENT" | tr '[:upper:]' '[:lower:]')
 
-config_file="../.ci/${environment}-values.yaml"
+config_file=".ci/${environment}-values.yaml"
 config=$(yaml2json < "$config_file")
 
 custom_host=$(echo "$config" | jq -r '.customHost')
