@@ -3,6 +3,7 @@ environment=$(echo "$ENVIRONMENT" | tr '[:upper:]' '[:lower:]')
 config_file=".ci/${environment}-values.yaml"
 enable=$(yq eval '.customHost.enabled' "$config_file")
 
+echo "value of enabled key: $enable"
 
 if [ "$enable" = "true" ]; then
   url=$(yq eval '.customHost.url' "$config_file")
