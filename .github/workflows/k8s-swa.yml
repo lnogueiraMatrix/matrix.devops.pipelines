@@ -108,9 +108,16 @@ jobs:
           token: ${{ secrets.GIT_TOKEN_CUSTOM }}  
           
       - name: Set up environment
+        if: github.ref_name == 'main'   
         run: |
-          echo "DEFAULT_URL=${APP_NAME}.matrixenergia.com" >> $GITHUB_ENV
-
+            echo "DEFAULT_URL={APP_NAME}.matrixenergia.com" >> $GITHUB_ENV
+            python Baseline\ files/swa/utils/update_dns.py
+  
+      - name: cloudflare dns registrarion
+        if: github.ref_name != 'main'    
+        run: |
+            echo "DEFAULT_URL={ENVIRONMENT_LOWER}-{APP_NAME}.matrixenergia.com" >> $GITHUB_ENV
+      
       - name: Run Shell Script
         run: |
           mv -f ${{ env.PIPELINE_PATH }}/utils/update_dns.sh ./
