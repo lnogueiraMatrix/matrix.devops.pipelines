@@ -32,6 +32,10 @@ on:
         type: string
         required: false
         default: dist
+      values:
+        type: string
+        required: false
+        default: .ci/values.yaml  
       tokenName:
         type: string
         required: false
@@ -212,7 +216,9 @@ jobs:
             --install \
             --atomic \
             --namespace '${{ inputs.namespace }}' \
+            --values '${{ inputs.values }}' \
             --create-namespace \
             --set environment='${{ env.ENVIRONMENT_LOWER }}' \
             --set image='${{ env.APP_IMAGE }}:${{ env.APP_TAG }}' \
             --set external='${{ inputs.external }}'
+          rm -r .ci/values.yaml 
