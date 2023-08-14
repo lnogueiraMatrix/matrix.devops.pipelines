@@ -120,7 +120,6 @@ jobs:
         if: github.ref_name == 'main'   
         run: |
             echo "DEFAULT_URL=${APP_NAME}.matrixenergia.com" >> $GITHUB_ENV
-            python Baseline\ files/swa/utils/update_dns.py
   
       - name: cloudflare dns registrarion
         if: github.ref_name != 'main'    
