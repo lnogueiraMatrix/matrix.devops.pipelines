@@ -11,11 +11,11 @@ fi
 
 echo "URL: $url"
 
-response=$(curl -s https://dev-app.matrixenergia.com/auto-dns/check_dns/$url )
+response=$(curl -s https://dev-app.matrixenergia.com/auto-dns/check_dns/$url)
 
 if [[ "$response" == *"\"exist\": true"* ]]; then
     echo "DNS already exists"
 else
-    second_response=$(curl --location --request POST https://dev-app.matrixenergia.com/auto-dns/create_dns/$url )
+    second_response=$(curl --location --request POST https://dev-app.matrixenergia.com/auto-dns/create_dns/$url?ip=$CLUSTER_IP )
     echo "creating a new dns register with: $url,     $second_response"
 fi
