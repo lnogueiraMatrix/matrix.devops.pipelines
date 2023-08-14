@@ -91,6 +91,11 @@ jobs:
           echo "APP_IMAGE=${REGISTRY_NAME}/${GITHUB_REPOSITORY,,}"  >> $GITHUB_ENV
           echo APP_TAG="${GITHUB_SHA:0:8}-${GITHUB_RUN_NUMBER}"     >> $GITHUB_ENV
           echo "KUBE_CONFIG=MATRIX_${ENVIRONMENT}_AKS_KUBE_CONFIG"  >> $GITHUB_ENV
+      
+      - name: configure values file
+        id: setup-values-file
+        run: |
+            cp .ci/${ENVIRONMENT_LOWER}-values.yaml .ci/values.yaml    
      
       - name: Install yq and jq
         run: |
