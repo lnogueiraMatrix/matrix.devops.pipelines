@@ -156,7 +156,7 @@ jobs:
           token: ${{ secrets[env.CLONE_TOKEN] }}
       - name: install app
         run: |
-          helm upgrade ${{ steps.configure-app.outputs.name }}-${{ steps.configure-app.outputs.revision }} \
+          helm upgrade ${{ env.APP_NAME }}-${{ steps.configure-app.outputs.revision }} \
             ${{ env.CHART_PATH }}/${{ env.CHART_TYPE }} \
             --atomic \
             --install \
