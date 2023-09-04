@@ -15,7 +15,7 @@ on:
       namespace:
         type: string
         required: false
-        default: matrix-jobs
+        default: matrix-cronjobs
       values:
         type: string
         required: false
