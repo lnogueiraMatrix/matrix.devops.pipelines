@@ -122,7 +122,7 @@ jobs:
           RESULT="$( cat .result | base64 -w0 )"
           echo "result=${RESULT}" >> $GITHUB_OUTPUT
           echo "config: ${RESULT}" > config.yaml
-          sed -n 'p' .ci/values.yaml config.yaml > .ci/values.yaml 
+          cat config.yaml >> .ci/values.yaml
           cat .ci/values.yaml
           rm -r app-config.txt
       - name: docker login
