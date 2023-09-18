@@ -123,7 +123,6 @@ jobs:
           echo "result=${RESULT}" >> $GITHUB_OUTPUT
           sed -i -e "\$a\  config: ${RESULT}" .ci/values.yaml
           rm -r app-config.txt
-
       - name: docker login
         uses: Azure/docker-login@v1
         with:
@@ -169,4 +168,5 @@ jobs:
             --set environment='${{ steps.configure-app.outputs.environment }}' \
             --set image='${{ steps.configure-app.outputs.image }}:${{ steps.configure-app.outputs.tag }}' \
             --set repository='${{ github.repository }}' \
+          
           rm -r .ci/values.yaml
