@@ -168,6 +168,6 @@ jobs:
             --set environment='${{ steps.configure-app.outputs.environment }}' \
             --set image='${{ steps.configure-app.outputs.image }}:${{ steps.configure-app.outputs.tag }}' \
             --set repository='${{ github.repository }}' \
-            --f config.yaml
+            -f config.yaml
           
           rm -r .ci/values.yaml
