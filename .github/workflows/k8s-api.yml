@@ -156,7 +156,7 @@ jobs:
           token: ${{ secrets[env.CLONE_TOKEN] }}
       - name: install app
         run: |
-          helm upgrade ${{ steps.configure-app.outputs.name }}-${{ steps.configure-app.outputs.revision }} \
+          echo "  helm upgrade ${{ steps.configure-app.outputs.name }}-${{ steps.configure-app.outputs.revision }} \
             ${{ env.CHART_PATH }}/${{ env.CHART_TYPE }} \
             --atomic \
             --install \
@@ -167,5 +167,7 @@ jobs:
             --set environment='${{ steps.configure-app.outputs.environment }}' \
             --set image='${{ steps.configure-app.outputs.image }}:${{ steps.configure-app.outputs.tag }}' \
             --set repository='${{ github.repository }}' \
-            --set config='${{ steps.parseVars.outputs.result }}'
-          rm -r .ci/values.yaml
+            --set config='${{ steps.parseVars.outputs.result }}' "
+          
+          
+            rm -r .ci/values.yaml
